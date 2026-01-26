@@ -1,0 +1,23 @@
+{
+  "name": "canvas",
+  "description": "Interactive terminal-based learning labs with automatic task detection. Virtual Teaching Assistant for hands-on technical education.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Canvas Team",
+    "email": "canvas@360xview.com"
+  },
+  "repository": "https://github.com/360XView/canvas-labs",
+  "homepage": "https://github.com/360XView/canvas-labs#readme",
+  "license": "MIT",
+  "keywords": [
+    "learning",
+    "labs",
+    "tui",
+    "vta",
+    "terminal",
+    "education",
+    "claude-code",
+    "tmux",
+    "docker"
+  ]
+}

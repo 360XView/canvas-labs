@@ -1,0 +1,45 @@
+id: python-mastery
+title: Python Mastery
+description: |
+  Complete Python programming fundamentals. Learn variables, functions,
+  object-oriented programming, and design patterns through hands-on labs.
+  Progress from basic syntax to professional coding practices.
+
+estimatedTotalTime: 120
+skillsGranted:
+  - python-basics
+  - python-functions
+  - python-oop
+  - python-patterns
+
+modules:
+  - id: python-fundamentals
+    title: Python Fundamentals
+    labType: python
+    description: Master the basics of Python including variables, data types, operators, and control flow.
+    estimatedTime: 30
+    prerequisites: []
+
+  - id: python-functions
+    title: Python Functions
+    labType: python
+    description: Learn how to define, call, and work with functions. Master parameters, return values, and scoping.
+    estimatedTime: 25
+    prerequisites:
+      - python-fundamentals
+
+  - id: python-oop
+    title: Python Object-Oriented Programming
+    labType: python
+    description: Understand classes, objects, inheritance, and polymorphism. Build reusable, modular code.
+    estimatedTime: 35
+    prerequisites:
+      - python-functions
+
+  - id: python-patterns
+    title: Python Design Patterns
+    labType: python
+    description: Explore common design patterns and best practices. Write professional, maintainable Python code.
+    estimatedTime: 30
+    prerequisites:
+      - python-oop

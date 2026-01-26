@@ -1,0 +1,113 @@
+title: Linux User Management
+description: Learn to create and manage Linux users on a server
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to the Linux User Management lab!
+
+        In this hands-on exercise, you'll learn essential skills for managing users on a Linux server:
+        - Becoming the root user for administrative tasks
+        - Creating new user accounts
+        - Setting file permissions
+        - Managing group memberships
+
+        Work in the terminal pane to the right. Complete each task to progress.
+
+  - id: become-root
+    title: Become Root User
+    type: task
+    content:
+      instructions: |
+        Before you can manage users, you need administrative privileges.
+        Become the root user to proceed.
+      tasks:
+        - text: Run sudo su to become root
+    hints:
+      - "The 'sudo' command runs things with admin privileges"
+      - "The 'su' command switches to another user (root by default)"
+    solution:
+      command: sudo su
+      explanation: This switches you to the root user account
+    validation:
+      type: check-script
+      script: check-is-root.sh
+      poll_interval: 2000
+
+  - id: create-user
+    title: Create a New User
+    type: task
+    content:
+      instructions: |
+        Create a new user account named "devuser".
+        Make sure to create a home directory for this user.
+      tasks:
+        - text: Create the devuser account with a home directory
+    hints:
+      - "The useradd command creates new user accounts"
+      - "The -m flag creates a home directory automatically"
+    solution:
+      command: useradd -m devuser
+      explanation: Creates user 'devuser' with home directory /home/devuser
+    validation:
+      type: check-script
+      script: check-user-exists.sh
+      poll_interval: 2000
+
+  - id: set-permissions
+    title: Set Permissions
+    type: task
+    content:
+      instructions: |
+        Set the permissions on devuser's home directory to 750.
+        This means: owner has full access, group can read and execute, others have no access.
+      tasks:
+        - text: Set /home/devuser permissions to 750
+    hints:
+      - "The chmod command changes file permissions"
+      - "750 = owner rwx (7), group rx (5), others none (0)"
+    solution:
+      command: chmod 750 /home/devuser
+      explanation: Sets owner=rwx, group=r-x, others=--- on the directory
+    validation:
+      type: check-script
+      script: check-permissions.sh
+      poll_interval: 2000
+
+  - id: add-to-group
+    title: Add to Group
+    type: task
+    content:
+      instructions: |
+        Add the devuser account to the "developers" group.
+        This will give devuser access to shared resources for developers.
+      tasks:
+        - text: Add devuser to the developers group
+    hints:
+      - "The usermod command modifies user accounts"
+      - "The -aG flag appends to supplementary groups"
+    solution:
+      command: usermod -aG developers devuser
+      explanation: Adds devuser to the developers group without removing other group memberships
+    validation:
+      type: check-script
+      script: check-group-membership.sh
+      poll_interval: 2000
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Congratulations! You've completed the Linux User Management lab.
+
+        You learned to:
+        - Use sudo su to become the root user
+        - Create users with useradd -m
+        - Set permissions with chmod
+        - Add users to groups with usermod -aG
+
+        These are fundamental skills for any Linux system administrator.

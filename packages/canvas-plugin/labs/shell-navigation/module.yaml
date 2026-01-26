@@ -1,0 +1,176 @@
+title: Shell Navigation Fundamentals
+description: Master navigating the filesystem with cd, pwd, and ls
+
+metadata:
+  category: shell
+  tags: [beginner, navigation, fundamentals]
+  estimatedMinutes: 15
+  difficulty: 1
+  course: shell-mastery
+  order: 1
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to Shell Navigation Fundamentals!
+
+        The shell is your command-line interface to the computer. Before you can do
+        anything useful, you need to know how to move around the filesystem.
+
+        In this lab, you'll learn:
+        - How to navigate using absolute and relative paths
+        - Essential commands: cd, pwd, ls
+        - Special directory shortcuts: . (current), .. (parent), ~ (home)
+
+        Complete each task in the terminal below. The lab will detect your progress.
+
+  - id: navigate-absolute
+    title: Navigate with Absolute Paths
+    type: task
+    content:
+      instructions: |
+        An **absolute path** starts from the root directory (/) and specifies
+        the complete path to a location.
+
+        Navigate to the /etc directory using an absolute path.
+      tasks:
+        - text: Change directory to /etc using an absolute path
+    hints:
+      - id: hint-1
+        text: "Use the cd command followed by the path"
+      - id: hint-2
+        text: "Absolute paths start with /"
+      - id: hint-3
+        text: "Type: cd /etc"
+    solution:
+      command: cd /etc
+      explanation: The cd command changes your current directory. /etc is where system configuration files live.
+    validation:
+      type: command-pattern
+      pattern: "cd\\s+/etc"
+
+  - id: navigate-relative
+    title: Navigate with Relative Paths
+    type: task
+    content:
+      instructions: |
+        A **relative path** is relative to your current location.
+
+        - `.` means "current directory"
+        - `..` means "parent directory"
+
+        From /etc, navigate up one directory to the root (/), then go to /home.
+      tasks:
+        - text: Go up one directory using ..
+        - text: Then navigate to /home
+    hints:
+      - id: hint-1
+        text: ".. takes you to the parent directory"
+      - id: hint-2
+        text: "You can chain: cd ../home or do it in two steps"
+      - id: hint-3
+        text: "Try: cd .. then cd home, or cd ../home"
+    solution:
+      command: cd ../home
+      explanation: "From /etc, .. goes to /, then home enters the /home directory"
+    validation:
+      type: command-pattern
+      pattern: "cd\\s+(\\.\\./home|/home)"
+
+  - id: home-shortcut
+    title: Use Home Directory Shortcut
+    type: task
+    content:
+      instructions: |
+        The tilde character `~` is a shortcut for your home directory.
+
+        Instead of typing the full path like /home/student, you can just use ~.
+
+        Navigate to your home directory using the ~ shortcut.
+      tasks:
+        - text: Use ~ to go to your home directory
+    hints:
+      - id: hint-1
+        text: "~ expands to your home directory path"
+      - id: hint-2
+        text: "Type: cd ~"
+    solution:
+      command: cd ~
+      explanation: "~ expands to your home directory (e.g., /home/student)"
+    validation:
+      type: command-pattern
+      pattern: "cd\\s+~"
+
+  - id: list-files
+    title: List Directory Contents
+    type: task
+    content:
+      instructions: |
+        The `ls` command lists directory contents.
+
+        Useful flags:
+        - `-l` for detailed (long) listing
+        - `-a` to show hidden files (starting with .)
+        - `-la` combines both
+
+        List all files in /var/log, including hidden files.
+      tasks:
+        - text: List all files in /var/log including hidden files
+    hints:
+      - id: hint-1
+        text: "-a shows hidden files (those starting with .)"
+      - id: hint-2
+        text: "You can specify a directory path after the flags"
+      - id: hint-3
+        text: "Try: ls -a /var/log"
+    solution:
+      command: ls -a /var/log
+      explanation: "-a shows all files including hidden ones. You can also use -la for a detailed listing."
+    validation:
+      type: command-pattern
+      pattern: "ls\\s+(-la|-al|-a)\\s+/var/log"
+
+  - id: path-quiz
+    title: Path Knowledge Check
+    type: question
+    content:
+      question:
+        text: "What does the path ../../home/student mean?"
+        type: single
+        options:
+          - id: opt-correct
+            text: "Go up two directories, then into home, then student"
+            correct: true
+            feedback: "Correct! Each .. goes up one directory level."
+          - id: opt-wrong-1
+            text: "Go to root, then home, then student"
+            correct: false
+            feedback: "Not quite. ../.. goes up two levels from current location, not to root."
+          - id: opt-wrong-2
+            text: "Go to the current directory twice"
+            correct: false
+            feedback: "No, . is current directory, .. is parent directory."
+        explanation: |
+          ../.. means "go up two directory levels." The path is relative to
+          where you currently are. From /etc/apt, ../../home/student would
+          go to /etc (first ..), then / (second ..), then into home/student.
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Excellent! You've mastered shell navigation fundamentals.
+
+        Key takeaways:
+        - `cd` changes directory
+        - `pwd` shows current directory (try it anytime!)
+        - `ls` lists files (-a for hidden, -l for details)
+        - Absolute paths start with /
+        - Relative paths are relative to current location
+        - `..` goes up one level, `~` is your home directory
+
+        Next up: Learn to work with files in "File Operations and Inspection"

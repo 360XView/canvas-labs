@@ -1,0 +1,310 @@
+title: Log Analysis Pipeline (Capstone)
+description: Apply all skills to analyze real-world server logs
+
+metadata:
+  category: shell
+  tags: [advanced, capstone, log-analysis, pipelines]
+  estimatedMinutes: 35
+  difficulty: 3
+  course: shell-mastery
+  order: 6
+  prerequisites: [shell-bash-scripting]
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to the Log Analysis Pipeline - your Shell Mastery capstone!
+
+        Real-world scenario: You're a sysadmin investigating server activity.
+        You have access logs and authentication logs to analyze.
+
+        Your mission:
+        - Find the most active IP addresses
+        - Analyze HTTP response codes
+        - Detect failed login attempts
+        - Build an automated analysis script
+
+        This lab combines everything you've learned:
+        navigation, file operations, text processing, find, and scripting.
+
+        Log files are ready in ~/logs. Let's analyze!
+
+  - id: top-ips
+    title: Find Top 10 IP Addresses
+    type: task
+    content:
+      instructions: |
+        The access.log file contains web server requests. Each line starts with
+        an IP address.
+
+        Build a pipeline to find the top 10 most frequent IP addresses:
+        1. Extract the first column (IP addresses)
+        2. Sort them
+        3. Count occurrences
+        4. Sort by count (descending)
+        5. Take top 10
+
+        Save the result to ~/analysis/top-ips.txt
+      tasks:
+        - text: Build a pipeline to find top 10 IPs
+        - text: Save result to ~/analysis/top-ips.txt
+    hints:
+      - id: hint-1
+        text: "awk '{print $1}' extracts the first column"
+      - id: hint-2
+        text: "sort | uniq -c | sort -rn is the frequency pattern"
+      - id: hint-3
+        text: "awk '{print $1}' ~/logs/access.log | sort | uniq -c | sort -rn | head -10 > ~/analysis/top-ips.txt"
+    solution:
+      command: "awk '{print $1}' ~/logs/access.log | sort | uniq -c | sort -rn | head -10 > ~/analysis/top-ips.txt"
+      explanation: "Extracts IPs, counts occurrences, sorts by frequency, takes top 10"
+    validation:
+      type: check-script
+      script: check-top-ips.sh
+      poll_interval: 2000
+
+  - id: status-codes
+    title: Count HTTP Status Codes
+    type: task
+    content:
+      instructions: |
+        HTTP status codes indicate request outcomes:
+        - 200: Success
+        - 404: Not Found
+        - 500: Server Error
+
+        In the access.log, the status code is typically in column 9.
+
+        Count how many of each status code appear and save to ~/analysis/status-codes.txt
+      tasks:
+        - text: Extract and count status codes
+        - text: Save to ~/analysis/status-codes.txt
+    hints:
+      - id: hint-1
+        text: "awk '{print $9}' gets the 9th column"
+      - id: hint-2
+        text: "Use the sort | uniq -c pattern"
+      - id: hint-3
+        text: "awk '{print $9}' ~/logs/access.log | sort | uniq -c | sort -rn > ~/analysis/status-codes.txt"
+    solution:
+      command: "awk '{print $9}' ~/logs/access.log | sort | uniq -c | sort -rn > ~/analysis/status-codes.txt"
+      explanation: "Extracts status codes from column 9, counts and sorts them"
+    validation:
+      type: check-script
+      script: check-status-codes.sh
+      poll_interval: 2000
+
+  - id: failed-logins
+    title: Find Failed Login Attempts
+    type: task
+    content:
+      instructions: |
+        The auth.log file contains authentication events.
+        Failed SSH logins contain "Failed password" in the message.
+
+        Search auth.log for failed login attempts and count them.
+      tasks:
+        - text: Find lines with "Failed password"
+        - text: Count how many failed attempts
+    hints:
+      - id: hint-1
+        text: "grep 'Failed password' finds the lines"
+      - id: hint-2
+        text: "wc -l counts lines"
+      - id: hint-3
+        text: "grep 'Failed password' ~/logs/auth.log | wc -l"
+    solution:
+      command: "grep 'Failed password' ~/logs/auth.log | wc -l"
+      explanation: "Finds all failed login lines and counts them"
+    validation:
+      type: command-pattern
+      pattern: "grep\\s+['\"]?Failed\\s+password['\"]?\\s+(~/logs/auth\\.log|/home/student/logs/auth\\.log)"
+
+  - id: failed-usernames
+    title: Extract Failed Login Usernames
+    type: task
+    content:
+      instructions: |
+        Let's find which usernames had failed login attempts.
+
+        The auth.log format includes: "Failed password for <username> from"
+
+        Extract the usernames that had failed attempts and save to ~/analysis/failed-users.txt
+      tasks:
+        - text: Extract usernames from failed login lines
+        - text: Save unique usernames to failed-users.txt
+    hints:
+      - id: hint-1
+        text: "grep 'Failed password' gets the relevant lines"
+      - id: hint-2
+        text: "awk can extract specific fields"
+      - id: hint-3
+        text: "grep 'Failed password' ~/logs/auth.log | awk '{print $9}' | sort | uniq > ~/analysis/failed-users.txt"
+    solution:
+      command: "grep 'Failed password' ~/logs/auth.log | awk '{print $9}' | sort | uniq > ~/analysis/failed-users.txt"
+      explanation: "Extracts the username field from failed login lines"
+    validation:
+      type: check-script
+      script: check-failed-usernames.sh
+      poll_interval: 2000
+
+  - id: create-script
+    title: Create Analysis Script
+    type: task
+    content:
+      instructions: |
+        Now automate everything! Create ~/scripts/analyze-logs.sh that generates
+        a complete report.
+
+        The script should:
+        1. Print header "=== Log Analysis Report ==="
+        2. Show top 5 IPs
+        3. Show status code breakdown
+        4. Show failed login count
+        5. Save full report to ~/analysis/report.txt
+      tasks:
+        - text: Create analyze-logs.sh
+        - text: Include all analysis steps
+        - text: Make it executable
+    hints:
+      - id: hint-1
+        text: "Start with #!/bin/bash and use echo for headers"
+      - id: hint-2
+        text: "Run each analysis and capture output"
+      - id: hint-3
+        text: |
+          cat > ~/scripts/analyze-logs.sh << 'SCRIPT'
+          #!/bin/bash
+          echo "=== Log Analysis Report ===" > ~/analysis/report.txt
+          echo "" >> ~/analysis/report.txt
+          echo "Top 5 IPs:" >> ~/analysis/report.txt
+          awk '{print $1}' ~/logs/access.log | sort | uniq -c | sort -rn | head -5 >> ~/analysis/report.txt
+          echo "" >> ~/analysis/report.txt
+          echo "Status Codes:" >> ~/analysis/report.txt
+          awk '{print $9}' ~/logs/access.log | sort | uniq -c | sort -rn >> ~/analysis/report.txt
+          echo "" >> ~/analysis/report.txt
+          echo "Failed Logins:" >> ~/analysis/report.txt
+          grep 'Failed password' ~/logs/auth.log | wc -l >> ~/analysis/report.txt
+          SCRIPT
+          chmod +x ~/scripts/analyze-logs.sh
+    solution:
+      command: |
+        cat > ~/scripts/analyze-logs.sh << 'SCRIPT'
+        #!/bin/bash
+        echo "=== Log Analysis Report ===" > ~/analysis/report.txt
+        echo "Top 5 IPs:" >> ~/analysis/report.txt
+        awk '{print $1}' ~/logs/access.log | sort | uniq -c | sort -rn | head -5 >> ~/analysis/report.txt
+        echo "Status Codes:" >> ~/analysis/report.txt
+        awk '{print $9}' ~/logs/access.log | sort | uniq -c | sort -rn >> ~/analysis/report.txt
+        echo "Failed Login Count:" >> ~/analysis/report.txt
+        grep 'Failed password' ~/logs/auth.log | wc -l >> ~/analysis/report.txt
+        SCRIPT
+        chmod +x ~/scripts/analyze-logs.sh
+      explanation: "Combines all analysis into one automated script"
+    validation:
+      type: check-script
+      script: check-analysis-script.sh
+      poll_interval: 2000
+
+  - id: make-reusable
+    title: Make Script Reusable
+    type: task
+    content:
+      instructions: |
+        Good scripts accept parameters! Modify analyze-logs.sh to accept
+        a log directory as an argument.
+
+        Usage: ./analyze-logs.sh /path/to/logs
+
+        The script should use $1 instead of hardcoded ~/logs
+      tasks:
+        - text: Modify script to accept log directory as $1
+        - text: Use ${1:-~/logs} for a default value
+    hints:
+      - id: hint-1
+        text: "Replace ~/logs with $1 throughout"
+      - id: hint-2
+        text: '${1:-default} provides a default if $1 is empty'
+      - id: hint-3
+        text: 'LOG_DIR="${1:-$HOME/logs}" at the start, then use $LOG_DIR'
+    solution:
+      command: |
+        cat > ~/scripts/analyze-logs.sh << 'SCRIPT'
+        #!/bin/bash
+        LOG_DIR="${1:-$HOME/logs}"
+        OUTPUT="$HOME/analysis/report.txt"
+        echo "=== Log Analysis Report ===" > "$OUTPUT"
+        echo "Analyzing: $LOG_DIR" >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        echo "Top 5 IPs:" >> "$OUTPUT"
+        awk '{print $1}' "$LOG_DIR/access.log" | sort | uniq -c | sort -rn | head -5 >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        echo "Status Codes:" >> "$OUTPUT"
+        awk '{print $9}' "$LOG_DIR/access.log" | sort | uniq -c | sort -rn >> "$OUTPUT"
+        echo "" >> "$OUTPUT"
+        echo "Failed Login Count:" >> "$OUTPUT"
+        grep 'Failed password' "$LOG_DIR/auth.log" | wc -l >> "$OUTPUT"
+        echo "Report saved to $OUTPUT"
+        SCRIPT
+        chmod +x ~/scripts/analyze-logs.sh
+      explanation: "Using a variable for the log directory makes the script reusable for any log location"
+    validation:
+      type: check-script
+      script: check-reusable-script.sh
+      poll_interval: 2000
+
+  - id: pipeline-quiz
+    title: Pipeline Design
+    type: question
+    content:
+      question:
+        text: "Why do we use 'sort | uniq -c | sort -rn' for frequency analysis?"
+        type: single
+        options:
+          - id: opt-correct
+            text: "First sort groups duplicates, uniq -c counts them, final sort orders by count"
+            correct: true
+            feedback: "Exactly! This three-stage pattern is the standard Unix frequency counter."
+          - id: opt-wrong-1
+            text: "It's the only way to count things in Unix"
+            correct: false
+            feedback: "There are other ways, but this pattern is elegant and efficient."
+          - id: opt-wrong-2
+            text: "Three sorts make it faster"
+            correct: false
+            feedback: "Actually it's not about speed - each step has a purpose."
+        explanation: |
+          The pattern: sort | uniq -c | sort -rn
+
+          1. sort - Groups identical items together (required for uniq)
+          2. uniq -c - Counts consecutive identical items
+          3. sort -rn - Sorts numerically (-n) in reverse (-r) order
+
+          This is a fundamental Unix pattern for frequency analysis!
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Congratulations! You've completed Shell Mastery!
+
+        In this capstone, you:
+        - Analyzed real-world log files
+        - Built complex multi-stage pipelines
+        - Created a reusable automation script
+        - Applied every skill from the course
+
+        Your Shell Mastery toolkit:
+        - Navigation: cd, pwd, ls
+        - File ops: cat, head, tail, grep, pipes, redirects
+        - Text processing: sort, uniq, awk, sed
+        - Finding: find with -name, -type, -exec
+        - Scripting: variables, conditionals, loops
+
+        You're now equipped to automate, analyze, and conquer the command line!
+
+        Keep practicing - the shell rewards mastery.

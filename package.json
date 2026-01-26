@@ -1,0 +1,18 @@
+{
+  "name": "canvas-labs",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "test:plugin": "cd packages/canvas-plugin && bun test src/lab/",
+    "test:tui": "bun run packages/tui-testing/examples/canvas-vta-test.ts",
+    "lab": "cd packages/canvas-plugin && bun run src/cli.ts lab"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

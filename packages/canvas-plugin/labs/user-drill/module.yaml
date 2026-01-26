@@ -1,0 +1,147 @@
+title: User Management Drill
+description: Quick practice creating and deleting Linux users
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Time to build muscle memory!
+
+        In this drill, you'll rapidly create and delete users.
+        Work quickly - the goal is repetition.
+
+        You're already root. Let's go.
+
+  - id: syntax-check
+    title: Command Knowledge Check
+    type: question
+    content:
+      question:
+        text: "Before we begin, which command is used to create a new user in Linux?"
+        type: single
+        options:
+          - id: opt-useradd
+            text: "useradd"
+            correct: true
+          - id: opt-adduser
+            text: "adduser"
+            correct: false
+            feedback: "adduser is a higher-level utility, but useradd is the core command"
+          - id: opt-mkuser
+            text: "mkuser"
+            correct: false
+          - id: opt-newuser
+            text: "newuser"
+            correct: false
+        explanation: "useradd is the standard low-level command to create users on Linux systems."
+
+  - id: create-user1
+    title: Create user1
+    type: task
+    content:
+      instructions: |
+        Create a user named **user1**.
+      tasks:
+        - text: Create user1
+    hints:
+      - "useradd creates users"
+    solution:
+      command: useradd user1
+    validation:
+      type: check-script
+      script: check-user1-exists.sh
+
+  - id: create-user2
+    title: Create user2
+    type: task
+    content:
+      instructions: |
+        Create a user named **user2**.
+      tasks:
+        - text: Create user2
+    hints:
+      - "useradd creates users"
+    solution:
+      command: useradd user2
+    validation:
+      type: check-script
+      script: check-user2-exists.sh
+
+  - id: create-user3
+    title: Create user3
+    type: task
+    content:
+      instructions: |
+        Create a user named **user3**.
+      tasks:
+        - text: Create user3
+    hints:
+      - "useradd creates users"
+    solution:
+      command: useradd user3
+    validation:
+      type: check-script
+      script: check-user3-exists.sh
+
+  - id: delete-user1
+    title: Delete user1
+    type: task
+    content:
+      instructions: |
+        Delete the user **user1**.
+      tasks:
+        - text: Delete user1
+    hints:
+      - "userdel removes users"
+    solution:
+      command: userdel user1
+    validation:
+      type: check-script
+      script: check-user1-deleted.sh
+
+  - id: delete-user2
+    title: Delete user2
+    type: task
+    content:
+      instructions: |
+        Delete the user **user2**.
+      tasks:
+        - text: Delete user2
+    hints:
+      - "userdel removes users"
+    solution:
+      command: userdel user2
+    validation:
+      type: check-script
+      script: check-user2-deleted.sh
+
+  - id: delete-user3
+    title: Delete user3
+    type: task
+    content:
+      instructions: |
+        Delete the user **user3**.
+      tasks:
+        - text: Delete user3
+    hints:
+      - "userdel removes users"
+    solution:
+      command: userdel user3
+    validation:
+      type: check-script
+      script: check-user3-deleted.sh
+
+  - id: summary
+    title: Complete
+    type: summary
+    content:
+      instructions: |
+        Drill complete!
+
+        You practiced:
+        - `useradd` to create users
+        - `userdel` to delete users
+
+        Run this drill again anytime to reinforce the commands.

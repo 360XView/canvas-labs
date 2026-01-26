@@ -1,0 +1,235 @@
+title: Finding Files and Automating Actions
+description: Search for files with find and execute commands on results
+
+metadata:
+  category: shell
+  tags: [intermediate, find, automation]
+  estimatedMinutes: 20
+  difficulty: 2
+  course: shell-mastery
+  order: 4
+  prerequisites: [shell-text-processing]
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to Finding Files and Automating Actions!
+
+        The `find` command is your filesystem search engine. It can locate files by:
+        - Name or pattern
+        - Type (file, directory, link)
+        - Size
+        - Modification time
+        - And much more!
+
+        Even better: find can execute commands on every file it finds.
+
+        A sample project structure has been created in ~/projects.
+        Let's learn to find anything in your filesystem!
+
+  - id: find-by-name
+    title: Find by Name
+    type: task
+    content:
+      instructions: |
+        The most common use: find files by name pattern.
+
+        Basic syntax: find <directory> -name '<pattern>'
+
+        Note: Use quotes around patterns with wildcards!
+
+        Find all .txt files in /home/student
+      tasks:
+        - text: Find all .txt files in /home/student
+    hints:
+      - id: hint-1
+        text: "Use -name with a pattern"
+      - id: hint-2
+        text: "Wildcards: * matches anything"
+      - id: hint-3
+        text: "find /home/student -name '*.txt'"
+    solution:
+      command: find /home/student -name '*.txt'
+      explanation: "-name matches the filename. Use quotes to prevent shell expansion of *"
+    validation:
+      type: command-pattern
+      pattern: "find\\s+(/home/student|~)\\s+-name\\s+['\"]\\*\\.txt['\"]"
+
+  - id: find-by-type
+    title: Find by Type
+    type: task
+    content:
+      instructions: |
+        Use -type to filter by file type:
+        - `-type f` for regular files
+        - `-type d` for directories
+        - `-type l` for symbolic links
+
+        Find all directories under ~/projects
+      tasks:
+        - text: Find all directories in ~/projects
+    hints:
+      - id: hint-1
+        text: "-type d finds directories"
+      - id: hint-2
+        text: "find ~/projects -type d"
+    solution:
+      command: find ~/projects -type d
+      explanation: "-type d returns only directories, not files"
+    validation:
+      type: command-pattern
+      pattern: "find\\s+(~/projects|/home/student/projects)\\s+-type\\s+d"
+
+  - id: find-by-size
+    title: Find by Size
+    type: task
+    content:
+      instructions: |
+        Use -size to find files by size:
+        - `+N` for larger than N
+        - `-N` for smaller than N
+        - Suffixes: c (bytes), k (KB), M (MB), G (GB)
+
+        Find files larger than 1KB in ~/data
+      tasks:
+        - text: Find files larger than 1KB
+    hints:
+      - id: hint-1
+        text: "+1k means larger than 1 kilobyte"
+      - id: hint-2
+        text: "find ~/data -size +1k"
+    solution:
+      command: find ~/data -size +1k
+      explanation: "+1k means greater than 1 kilobyte. Use -1k for smaller than."
+    validation:
+      type: command-pattern
+      pattern: "find\\s+(~/data|/home/student/data)\\s+-size\\s+\\+1k"
+
+  - id: find-by-time
+    title: Find by Modification Time
+    type: task
+    content:
+      instructions: |
+        Find recently modified files with -mmin (minutes) or -mtime (days):
+        - `-mmin -5` files modified in last 5 minutes
+        - `-mtime -1` files modified in last 24 hours
+        - `+N` for older than N
+
+        Find files modified in the last 10 minutes in /home/student
+      tasks:
+        - text: Find recently modified files (last 10 minutes)
+    hints:
+      - id: hint-1
+        text: "-mmin -N means modified within N minutes"
+      - id: hint-2
+        text: "find /home/student -mmin -10"
+    solution:
+      command: find /home/student -mmin -10
+      explanation: "-mmin -10 finds files modified less than 10 minutes ago"
+    validation:
+      type: command-pattern
+      pattern: "find\\s+(/home/student|~)\\s+-mmin\\s+-10"
+
+  - id: find-with-exec
+    title: Execute Command on Found Files
+    type: task
+    content:
+      instructions: |
+        The real power of find: -exec runs a command on each result.
+
+        Syntax: find ... -exec <command> {} \;
+        - {} is replaced with each found file
+        - \; marks the end of the command
+
+        Find all .log files in ~/logs and display their sizes with ls -lh
+      tasks:
+        - text: Find .log files and show their sizes
+    hints:
+      - id: hint-1
+        text: "-exec runs a command for each file"
+      - id: hint-2
+        text: "{} is replaced with the filename"
+      - id: hint-3
+        text: "find ~/logs -name '*.log' -exec ls -lh {} \\;"
+    solution:
+      command: find ~/logs -name '*.log' -exec ls -lh {} \;
+      explanation: "For each .log file found, runs ls -lh to show size in human-readable format"
+    validation:
+      type: command-pattern
+      pattern: "find\\s+(~/logs|/home/student/logs)\\s+-name\\s+['\"]\\*\\.log['\"]\\s+-exec\\s+ls"
+
+  - id: find-with-grep
+    title: Find Files Containing Text
+    type: task
+    content:
+      instructions: |
+        Combine find with grep to search inside files.
+
+        Find all .txt files containing the word 'TODO' in ~/projects
+
+        Tip: grep -l prints just the filename (not the matching lines)
+      tasks:
+        - text: Find .txt files containing 'TODO'
+    hints:
+      - id: hint-1
+        text: "Combine find -exec with grep"
+      - id: hint-2
+        text: "grep -l prints filenames only"
+      - id: hint-3
+        text: "find ~/projects -name '*.txt' -exec grep -l TODO {} \\;"
+    solution:
+      command: find ~/projects -name '*.txt' -exec grep -l TODO {} \;
+      explanation: "Finds .txt files, then greps each one. -l makes grep print only matching filenames."
+    validation:
+      type: command-pattern
+      pattern: "find\\s+(~/projects|/home/student/projects)\\s+-name\\s+['\"]\\*\\.txt['\"]\\s+-exec\\s+grep\\s+-l\\s+TODO"
+
+  - id: find-quiz
+    title: Find Performance
+    type: question
+    content:
+      question:
+        text: "Why might find be slower than ls for listing a single directory?"
+        type: single
+        options:
+          - id: opt-correct
+            text: "find searches recursively by default"
+            correct: true
+            feedback: "Correct! find traverses all subdirectories unless you limit depth."
+          - id: opt-wrong-1
+            text: "ls is a shell built-in command"
+            correct: false
+            feedback: "Actually, ls is usually an external command too."
+          - id: opt-wrong-2
+            text: "find is written in a slower language"
+            correct: false
+            feedback: "No, find is compiled C code and is quite fast."
+        explanation: |
+          find searches recursively by default, visiting every subdirectory.
+          For a single directory, use:
+          - ls for listing
+          - find -maxdepth 1 to limit find to one level
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Great work! You can now find anything in your filesystem.
+
+        Key find options:
+        - `-name 'pattern'` - match by name
+        - `-type f/d` - files or directories
+        - `-size +/-N` - by size
+        - `-mmin +/-N` - by modification time
+        - `-exec cmd {} \;` - run command on results
+
+        Pro tips:
+        - Use -maxdepth N to limit recursion depth
+        - Use -iname for case-insensitive matching
+        - Use + instead of \; for better performance with many files
+
+        Next: Learn to write scripts in "Bash Scripting Basics"

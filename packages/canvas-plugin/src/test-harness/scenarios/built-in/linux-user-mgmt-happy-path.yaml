@@ -1,0 +1,62 @@
+# Linux User Management - Happy Path Scenario
+# Tests the successful completion of all lab steps without hints or solutions
+
+id: linux-user-mgmt-happy-path
+name: Happy Path - Linux User Management
+description: |
+  Complete happy path through the linux-user-management lab.
+  Student executes all commands correctly on first try.
+
+moduleId: linux-user-management
+
+checkpoints:
+  - id: become-root
+    trigger:
+      type: step_completed
+      stepId: become-root
+    description: Student becomes root user via sudo su
+
+  - id: create-user
+    trigger:
+      type: step_completed
+      stepId: create-user
+    description: Student creates devuser with home directory
+
+  - id: set-permissions
+    trigger:
+      type: step_completed
+      stepId: set-permissions
+    description: Student sets /home/devuser permissions to 750
+
+  - id: add-to-group
+    trigger:
+      type: step_completed
+      stepId: add-to-group
+    description: Student adds devuser to developers group
+
+successCriteria:
+  allCheckpoints: true
+  minScore: 0.7
+  maxHints: 2
+  maxSolutionsViewed: 0
+  withinTimeout: true
+
+timeoutMs: 120000
+maxActions: 50
+
+# Optional: Pre-defined actions for scripted execution
+actions:
+  - type: command
+    command: "sudo su"
+  - type: command
+    command: "useradd -m devuser"
+  - type: command
+    command: "chmod 750 /home/devuser"
+  - type: command
+    command: "usermod -aG developers devuser"
+
+metadata:
+  author: test-harness
+  version: "1.0"
+  difficulty: beginner
+  estimatedTimeMinutes: 5

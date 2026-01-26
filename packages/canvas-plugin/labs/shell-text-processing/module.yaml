@@ -1,0 +1,255 @@
+title: Text Processing with Unix Tools
+description: Transform and analyze text data with sort, uniq, awk, and sed
+
+metadata:
+  category: shell
+  tags: [intermediate, text-processing, pipelines]
+  estimatedMinutes: 25
+  difficulty: 2
+  course: shell-mastery
+  order: 3
+  prerequisites: [shell-file-operations]
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to Text Processing with Unix Tools!
+
+        Unix philosophy: small tools that do one thing well, combined via pipes.
+        In this lab, you'll learn powerful text manipulation tools:
+
+        - `sort` - arrange lines in order
+        - `uniq` - find or remove duplicates
+        - `awk` - extract and process columns
+        - `sed` - find and replace text
+
+        Combined in pipelines, these tools can analyze any text data.
+        Sample files are ready in ~/data. Let's transform some text!
+
+  - id: sort-lines
+    title: Sort Lines
+    type: task
+    content:
+      instructions: |
+        The `sort` command arranges lines in alphabetical order by default.
+
+        Useful flags:
+        - `-r` for reverse order
+        - `-n` for numeric sorting
+        - `-k N` to sort by column N
+
+        Sort the contents of ~/data/names.txt alphabetically.
+      tasks:
+        - text: Use sort to arrange names.txt in order
+    hints:
+      - id: hint-1
+        text: "sort rearranges lines alphabetically"
+      - id: hint-2
+        text: "sort ~/data/names.txt"
+    solution:
+      command: sort ~/data/names.txt
+      explanation: "sort reads lines and outputs them in sorted order"
+    validation:
+      type: command-pattern
+      pattern: "sort\\s+(~/data/names\\.txt|/home/student/data/names\\.txt)"
+
+  - id: find-unique
+    title: Find Unique Lines
+    type: task
+    content:
+      instructions: |
+        `uniq` removes adjacent duplicate lines.
+
+        **Important**: uniq only removes *consecutive* duplicates!
+        This is why you usually sort first.
+
+        Find unique entries in ~/data/duplicates.txt
+        (Hint: sort first, then pipe to uniq)
+      tasks:
+        - text: Use sort and uniq together to find unique entries
+    hints:
+      - id: hint-1
+        text: "uniq removes consecutive duplicates"
+      - id: hint-2
+        text: "Sort first to make duplicates adjacent"
+      - id: hint-3
+        text: "sort ~/data/duplicates.txt | uniq"
+    solution:
+      command: sort ~/data/duplicates.txt | uniq
+      explanation: "Sorting groups identical lines together, then uniq removes the duplicates"
+    validation:
+      type: command-pattern
+      pattern: "sort\\s+(~/data/duplicates\\.txt|/home/student/data/duplicates\\.txt)\\s*\\|\\s*uniq"
+
+  - id: count-occurrences
+    title: Count Occurrences
+    type: task
+    content:
+      instructions: |
+        `uniq -c` counts how many times each line appears.
+
+        This is a common pattern for frequency analysis:
+        sort | uniq -c | sort -rn (shows most frequent first)
+
+        Count how many times each line appears in duplicates.txt
+      tasks:
+        - text: Use uniq -c to count occurrences
+    hints:
+      - id: hint-1
+        text: "-c flag adds a count prefix"
+      - id: hint-2
+        text: "Remember to sort first!"
+      - id: hint-3
+        text: "sort ~/data/duplicates.txt | uniq -c"
+    solution:
+      command: sort ~/data/duplicates.txt | uniq -c
+      explanation: "Each line is prefixed with its count. Add | sort -rn to see most frequent first."
+    validation:
+      type: command-pattern
+      pattern: "sort\\s+(~/data/duplicates\\.txt|/home/student/data/duplicates\\.txt)\\s*\\|\\s*uniq\\s+-c"
+
+  - id: extract-column
+    title: Extract Column with Awk
+    type: task
+    content:
+      instructions: |
+        `awk` is a powerful text processing language. Its most common use
+        is extracting columns from structured data.
+
+        - `$1` is the first column
+        - `$2` is the second column
+        - `$0` is the entire line
+
+        Extract the second column (ages) from ~/data/data.csv
+      tasks:
+        - text: Use awk to print column 2
+    hints:
+      - id: hint-1
+        text: "awk splits lines by whitespace by default"
+      - id: hint-2
+        text: "awk '{print $2}' filename"
+      - id: hint-3
+        text: "awk '{print $2}' ~/data/data.csv"
+    solution:
+      command: awk '{print $2}' ~/data/data.csv
+      explanation: "awk automatically splits each line into fields. $2 refers to the second field."
+    validation:
+      type: command-pattern
+      pattern: "awk\\s+'\\{print\\s+\\$2\\}'\\s+(~/data/data\\.csv|/home/student/data/data\\.csv)"
+
+  - id: sed-replace
+    title: Find and Replace with Sed
+    type: task
+    content:
+      instructions: |
+        `sed` is the stream editor - it transforms text as it passes through.
+
+        Basic substitution: sed 's/find/replace/' file
+        Add 'g' flag for global (all occurrences): sed 's/find/replace/g'
+
+        Replace all instances of 'error' with 'ERROR' in ~/data/errors.txt
+        and save the output to ~/data/errors-fixed.txt
+      tasks:
+        - text: Use sed to replace text and save to a new file
+    hints:
+      - id: hint-1
+        text: "sed 's/old/new/g' for global replacement"
+      - id: hint-2
+        text: "Use > to redirect output to a file"
+      - id: hint-3
+        text: "sed 's/error/ERROR/g' ~/data/errors.txt > ~/data/errors-fixed.txt"
+    solution:
+      command: sed 's/error/ERROR/g' ~/data/errors.txt > ~/data/errors-fixed.txt
+      explanation: "The g flag replaces all occurrences on each line, not just the first"
+    validation:
+      type: check-script
+      script: check-sed-replace.sh
+      poll_interval: 2000
+
+  - id: build-pipeline
+    title: Build Analysis Pipeline
+    type: task
+    content:
+      instructions: |
+        Now let's combine everything! Build a pipeline to analyze word frequency.
+
+        Find the top 3 most common words in ~/data/text.txt:
+        1. Convert spaces to newlines (one word per line)
+        2. Sort the words
+        3. Count unique occurrences
+        4. Sort by count (descending)
+        5. Take top 3
+
+        Save the result to ~/data/word-freq.txt
+      tasks:
+        - text: Build a pipeline to find top 3 words
+        - text: Save the result to word-freq.txt
+    hints:
+      - id: hint-1
+        text: "tr ' ' '\\n' converts spaces to newlines"
+      - id: hint-2
+        text: "sort -rn sorts numerically in reverse"
+      - id: hint-3
+        text: "tr ' ' '\\n' < ~/data/text.txt | sort | uniq -c | sort -rn | head -3 > ~/data/word-freq.txt"
+    solution:
+      command: "tr ' ' '\\n' < ~/data/text.txt | sort | uniq -c | sort -rn | head -3 > ~/data/word-freq.txt"
+      explanation: |
+        This pipeline:
+        1. tr converts spaces to newlines (one word per line)
+        2. sort groups identical words together
+        3. uniq -c counts each word
+        4. sort -rn orders by count, highest first
+        5. head -3 takes top 3
+        6. > saves to file
+    validation:
+      type: check-script
+      script: check-word-frequency.sh
+      poll_interval: 2000
+
+  - id: pipeline-quiz
+    title: Pipeline Order
+    type: question
+    content:
+      question:
+        text: "Why do we sort before using uniq?"
+        type: single
+        options:
+          - id: opt-correct
+            text: "uniq only removes consecutive duplicates"
+            correct: true
+            feedback: "Correct! Sorting groups identical items together so uniq can find them."
+          - id: opt-wrong-1
+            text: "sort is always required before any command"
+            correct: false
+            feedback: "No, sort is only needed when you need ordered data or adjacent duplicates."
+          - id: opt-wrong-2
+            text: "It doesn't matter, order has no effect"
+            correct: false
+            feedback: "Order matters! Try 'uniq' without sorting to see the difference."
+        explanation: |
+          uniq only compares adjacent lines. Without sorting:
+          - apple, banana, apple → apple, banana, apple (duplicates missed!)
+
+          With sorting:
+          - apple, apple, banana → apple, banana (duplicates found!)
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Excellent! You've mastered Unix text processing tools.
+
+        Key patterns:
+        - `sort | uniq` - find unique items
+        - `sort | uniq -c` - count occurrences
+        - `sort | uniq -c | sort -rn` - frequency analysis
+        - `awk '{print $N}'` - extract column N
+        - `sed 's/old/new/g'` - find and replace
+
+        The Unix philosophy: combine small, focused tools into powerful pipelines.
+
+        Next: Learn to find files with "Finding Files and Automating Actions"

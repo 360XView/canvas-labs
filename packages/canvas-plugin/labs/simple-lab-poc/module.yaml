@@ -1,0 +1,45 @@
+title: Simple File Operations Test Lab
+description: Minimal lab for testing automation
+labType: linux_cli
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        This is a test lab for automation.
+        You'll create and verify files.
+
+  - id: create-file
+    title: Create a File
+    type: task
+    content:
+      instructions: |
+        Create a file at /tmp/testfile.txt
+      tasks:
+        - text: Run touch /tmp/testfile.txt
+    validation:
+      type: check-script
+      script: check-file-exists.sh
+      poll_interval: 1000
+
+  - id: write-content
+    title: Write Content
+    type: task
+    content:
+      instructions: |
+        Write "hello world" to the file
+      tasks:
+        - text: Run echo "hello world" > /tmp/testfile.txt
+    validation:
+      type: check-script
+      script: check-file-content.sh
+      poll_interval: 1000
+
+  - id: summary
+    title: Complete
+    type: summary
+    content:
+      instructions: |
+        You've completed the test lab!

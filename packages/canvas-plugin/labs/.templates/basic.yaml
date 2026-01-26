@@ -1,0 +1,89 @@
+# Lab Module Template
+# Copy this file to labs/<your-lab-id>/module.yaml and customize
+
+id: new-lab
+title: New Lab Title
+description: Describe what students will learn in this lab
+
+steps:
+  # Introduction step - explains the lab objectives
+  - id: introduction
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to this lab!
+
+        ## Learning Objectives
+
+        In this lab, you will learn to:
+        - Objective 1
+        - Objective 2
+        - Objective 3
+
+        The system will automatically verify when you complete each task.
+
+  # First task step
+  - id: task-1
+    title: First Task
+    type: task
+    content:
+      instructions: |
+        Detailed instructions for the first task go here.
+
+        Explain what the student needs to accomplish and why.
+      tasks:
+        - text: "Main task description"
+          details:
+            - "Additional detail or requirement"
+            - "Another detail"
+    hints:
+      - "First hint - general guidance without giving the answer"
+      - "Second hint - more specific guidance"
+      - "Third hint - nearly complete guidance"
+    solution:
+      command: "the-command-to-run"
+      description: "Brief description of the solution"
+      explanation: "Explanation of why this command works and what it does"
+    validation:
+      type: check-script
+      script: check-task-1.sh
+      poll_interval: 2000
+
+  # Second task step (example with user-check validation)
+  - id: task-2
+    title: Second Task
+    type: task
+    content:
+      instructions: |
+        Instructions for the second task.
+      tasks:
+        - text: "Second task description"
+    hints:
+      - "Hint for task 2"
+    solution:
+      command: "second-command"
+      explanation: "Why this works"
+    validation:
+      type: command-pattern
+      pattern: "second-command.*"
+
+  # Summary step - congratulates completion
+  - id: summary
+    title: Lab Complete!
+    type: summary
+    content:
+      instructions: |
+        Congratulations! You have successfully completed this lab.
+
+        ## What You Learned
+
+        - Skill 1 from objective 1
+        - Skill 2 from objective 2
+        - Skill 3 from objective 3
+
+        ## Next Steps
+
+        Consider trying these related labs:
+        - Related Lab 1
+        - Related Lab 2

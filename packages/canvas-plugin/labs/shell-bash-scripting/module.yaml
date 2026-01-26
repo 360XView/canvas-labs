@@ -1,0 +1,344 @@
+title: Bash Scripting Basics
+description: Write shell scripts with variables, conditionals, and loops
+
+metadata:
+  category: shell
+  tags: [intermediate, scripting, automation]
+  estimatedMinutes: 30
+  difficulty: 2
+  course: shell-mastery
+  order: 5
+  prerequisites: [shell-find-files]
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to Bash Scripting Basics!
+
+        Shell scripts automate repetitive tasks. Instead of typing commands
+        one by one, you write them in a file and run them together.
+
+        In this lab, you'll learn:
+        - Creating executable scripts
+        - Using variables and arguments
+        - Writing conditionals (if/then)
+        - Writing loops (for, while)
+        - Understanding exit codes
+
+        Scripts will be created in ~/scripts. Let's start automating!
+
+  - id: create-first-script
+    title: Create First Script
+    type: task
+    content:
+      instructions: |
+        A bash script is a text file containing commands.
+
+        Key elements:
+        1. Start with a shebang: #!/bin/bash
+        2. Make it executable: chmod +x script.sh
+        3. Run it: ./script.sh
+
+        Create ~/scripts/hello.sh that prints "Hello, World!"
+      tasks:
+        - text: Create hello.sh with proper shebang
+        - text: Make it executable
+        - text: Verify it prints "Hello, World!"
+    hints:
+      - id: hint-1
+        text: "Start the file with #!/bin/bash"
+      - id: hint-2
+        text: "Use echo to print text"
+      - id: hint-3
+        text: |
+          Create with: cat > ~/scripts/hello.sh << 'EOF'
+          #!/bin/bash
+          echo "Hello, World!"
+          EOF
+
+          Then: chmod +x ~/scripts/hello.sh
+    solution:
+      command: |
+        cat > ~/scripts/hello.sh << 'EOF'
+        #!/bin/bash
+        echo "Hello, World!"
+        EOF
+        chmod +x ~/scripts/hello.sh
+      explanation: "The shebang tells the system which interpreter to use. chmod +x makes it executable."
+    validation:
+      type: check-script
+      script: check-hello-script.sh
+      poll_interval: 2000
+
+  - id: use-variables
+    title: Use Variables
+    type: task
+    content:
+      instructions: |
+        Variables store values for later use.
+
+        - Set a variable: NAME="value" (no spaces around =)
+        - Use a variable: $NAME or ${NAME}
+        - Command line arguments: $1, $2, etc.
+
+        Create ~/scripts/greet.sh that takes a name argument and prints
+        "Hello, <name>!"
+      tasks:
+        - text: Create greet.sh that uses $1 for the name
+        - text: Make it executable
+    hints:
+      - id: hint-1
+        text: "$1 is the first argument passed to the script"
+      - id: hint-2
+        text: 'Use: echo "Hello, $1!"'
+      - id: hint-3
+        text: |
+          cat > ~/scripts/greet.sh << 'EOF'
+          #!/bin/bash
+          echo "Hello, $1!"
+          EOF
+          chmod +x ~/scripts/greet.sh
+    solution:
+      command: |
+        cat > ~/scripts/greet.sh << 'EOF'
+        #!/bin/bash
+        NAME=$1
+        echo "Hello, $NAME!"
+        EOF
+        chmod +x ~/scripts/greet.sh
+      explanation: "$1 contains the first argument. Run with: ./greet.sh Alice"
+    validation:
+      type: check-script
+      script: check-greet-script.sh
+      poll_interval: 2000
+
+  - id: write-if-statement
+    title: Write If Statement
+    type: task
+    content:
+      instructions: |
+        Conditionals let scripts make decisions.
+
+        Syntax:
+        ```
+        if [ condition ]; then
+            commands
+        fi
+        ```
+
+        Common tests:
+        - [ -f file ] - file exists
+        - [ -d dir ] - directory exists
+        - [ "$a" = "$b" ] - strings equal
+
+        Create ~/scripts/check-file.sh that checks if a file exists (passed as $1)
+      tasks:
+        - text: Create check-file.sh with an if statement
+        - text: Print "File exists" or "File not found"
+    hints:
+      - id: hint-1
+        text: '[ -f "$1" ] tests if $1 is a file'
+      - id: hint-2
+        text: "Use else for the 'not found' case"
+      - id: hint-3
+        text: |
+          if [ -f "$1" ]; then
+              echo "File exists"
+          else
+              echo "File not found"
+          fi
+    solution:
+      command: |
+        cat > ~/scripts/check-file.sh << 'EOF'
+        #!/bin/bash
+        if [ -f "$1" ]; then
+            echo "File exists"
+        else
+            echo "File not found"
+        fi
+        EOF
+        chmod +x ~/scripts/check-file.sh
+      explanation: "[ -f file ] returns true if file exists and is a regular file"
+    validation:
+      type: check-script
+      script: check-if-script.sh
+      poll_interval: 2000
+
+  - id: write-for-loop
+    title: Write For Loop
+    type: task
+    content:
+      instructions: |
+        For loops iterate over a list of items.
+
+        Syntax:
+        ```
+        for item in list; do
+            commands
+        done
+        ```
+
+        The list can be:
+        - Words: for x in a b c
+        - Numbers: for i in {1..10}
+        - Files: for f in *.txt
+
+        Create ~/scripts/count.sh that prints numbers 1 to 5
+      tasks:
+        - text: Create count.sh with a for loop
+        - text: Print each number on its own line
+    hints:
+      - id: hint-1
+        text: "Use {1..5} to generate numbers 1 through 5"
+      - id: hint-2
+        text: "for i in {1..5}; do echo $i; done"
+      - id: hint-3
+        text: |
+          cat > ~/scripts/count.sh << 'EOF'
+          #!/bin/bash
+          for i in {1..5}; do
+              echo $i
+          done
+          EOF
+          chmod +x ~/scripts/count.sh
+    solution:
+      command: |
+        cat > ~/scripts/count.sh << 'EOF'
+        #!/bin/bash
+        for i in {1..5}; do
+            echo $i
+        done
+        EOF
+        chmod +x ~/scripts/count.sh
+      explanation: "{1..5} is bash brace expansion that generates 1 2 3 4 5"
+    validation:
+      type: check-script
+      script: check-for-loop-script.sh
+      poll_interval: 2000
+
+  - id: write-while-loop
+    title: Write While Loop
+    type: task
+    content:
+      instructions: |
+        While loops continue as long as a condition is true.
+
+        Syntax:
+        ```
+        while [ condition ]; do
+            commands
+        done
+        ```
+
+        Useful for:
+        - Counting with a counter variable
+        - Waiting for something to happen
+        - Reading files line by line
+
+        Create ~/scripts/countdown.sh that counts down from 3 to 1, then prints "Go!"
+      tasks:
+        - text: Create countdown.sh with a while loop
+        - text: Use a counter variable
+    hints:
+      - id: hint-1
+        text: "Start with COUNT=3"
+      - id: hint-2
+        text: "[ $COUNT -gt 0 ] means COUNT greater than 0"
+      - id: hint-3
+        text: "Decrement with COUNT=$((COUNT-1))"
+    solution:
+      command: |
+        cat > ~/scripts/countdown.sh << 'EOF'
+        #!/bin/bash
+        COUNT=3
+        while [ $COUNT -gt 0 ]; do
+            echo $COUNT
+            COUNT=$((COUNT-1))
+        done
+        echo "Go!"
+        EOF
+        chmod +x ~/scripts/countdown.sh
+      explanation: "$((expr)) does arithmetic. -gt is 'greater than' in test conditions."
+    validation:
+      type: check-script
+      script: check-while-loop-script.sh
+      poll_interval: 2000
+
+  - id: chain-commands
+    title: Chain Commands with && and ||
+    type: task
+    content:
+      instructions: |
+        Exit codes and command chaining:
+        - Exit code 0 = success
+        - Exit code non-zero = failure
+        - && runs next command only if previous succeeded
+        - || runs next command only if previous failed
+
+        Run a command that demonstrates && :
+        Search for "TODO" in ~/todo.txt and print "Found!" only if the search succeeds
+      tasks:
+        - text: Use && to chain grep with echo
+    hints:
+      - id: hint-1
+        text: "&& runs the second command only if the first succeeds"
+      - id: hint-2
+        text: "grep returns 0 (success) if it finds a match"
+      - id: hint-3
+        text: 'grep TODO ~/todo.txt && echo "Found!"'
+    solution:
+      command: grep TODO ~/todo.txt && echo "Found!"
+      explanation: "If grep finds 'TODO', it exits 0, and 'Found!' is printed. If not found, echo is skipped."
+    validation:
+      type: command-pattern
+      pattern: "grep\\s+TODO\\s+(~/todo\\.txt|/home/student/todo\\.txt)\\s*&&\\s*echo"
+
+  - id: exit-code-quiz
+    title: Exit Codes
+    type: question
+    content:
+      question:
+        text: "What does exit code 0 mean in Unix?"
+        type: single
+        options:
+          - id: opt-correct
+            text: "Success - the command completed without errors"
+            correct: true
+            feedback: "Correct! Exit code 0 always means success in Unix."
+          - id: opt-wrong-1
+            text: "Failure - something went wrong"
+            correct: false
+            feedback: "No, non-zero exit codes indicate failure."
+          - id: opt-wrong-2
+            text: "No output was produced"
+            correct: false
+            feedback: "Exit code is about success/failure, not output."
+        explanation: |
+          Unix convention:
+          - Exit code 0 = success
+          - Exit code 1-255 = various types of failure
+
+          This is why && (and) and || (or) work:
+          - && continues if exit code is 0
+          - || continues if exit code is non-zero
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Excellent! You're now a bash programmer!
+
+        Key concepts:
+        - Shebang: #!/bin/bash
+        - Variables: NAME="value", use with $NAME
+        - Arguments: $1, $2, ... $@ for all
+        - Conditionals: if [ test ]; then ... fi
+        - For loops: for x in list; do ... done
+        - While loops: while [ test ]; do ... done
+        - Exit codes: 0=success, &&/|| for chaining
+
+        Next: Apply everything in "Log Analysis Pipeline" - a real-world capstone!

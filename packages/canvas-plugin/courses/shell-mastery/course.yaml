@@ -1,0 +1,99 @@
+id: shell-mastery
+title: Shell Mastery
+description: |
+  Master the Unix shell from navigation to automation.
+  Based on MIT Missing Semester - Shell Lecture.
+
+  This course takes you from basic command-line navigation through
+  advanced text processing, file finding, and bash scripting,
+  culminating in a real-world log analysis capstone project.
+
+metadata:
+  category: shell
+  tags: [unix, linux, command-line, bash, fundamentals]
+  estimatedHours: 2.5
+  difficulty: beginner-to-intermediate
+  version: "1.0.0"
+  author: canvas-team
+  createdAt: "2026-01-22"
+
+config:
+  requireSequential: true
+  allowSkip: false
+  passingScore: 70
+
+modules:
+  - moduleId: shell-navigation
+    order: 1
+    required: true
+    title: Shell Navigation Fundamentals
+    description: Learn to navigate the filesystem with absolute and relative paths
+    estimatedMinutes: 15
+
+  - moduleId: shell-file-operations
+    order: 2
+    required: true
+    prerequisites: [shell-navigation]
+    title: File Operations and Inspection
+    description: Read files, search with grep, and master pipes and redirects
+    estimatedMinutes: 20
+
+  - moduleId: shell-text-processing
+    order: 3
+    required: true
+    prerequisites: [shell-file-operations]
+    title: Text Processing with Unix Tools
+    description: Transform data with sort, uniq, awk, and sed pipelines
+    estimatedMinutes: 25
+
+  - moduleId: shell-find-files
+    order: 4
+    required: true
+    prerequisites: [shell-text-processing]
+    title: Finding Files and Automating Actions
+    description: Search for files by name, size, and time with find and -exec
+    estimatedMinutes: 20
+
+  - moduleId: shell-bash-scripting
+    order: 5
+    required: true
+    prerequisites: [shell-find-files]
+    title: Bash Scripting Basics
+    description: Create scripts with variables, conditionals, and loops
+    estimatedMinutes: 30
+
+  - moduleId: shell-log-analysis
+    order: 6
+    required: true
+    prerequisites: [shell-bash-scripting]
+    title: Log Analysis Pipeline (Capstone)
+    description: Apply all skills to analyze real-world server logs
+    estimatedMinutes: 35
+
+learningOutcomes:
+  - Navigate the Unix filesystem confidently
+  - Read, search, and manipulate files efficiently
+  - Build multi-stage data processing pipelines
+  - Find files using complex criteria
+  - Write reusable bash scripts
+  - Analyze log files for actionable insights
+
+skillsMapped:
+  - id: shell-navigation
+    name: Shell Navigation
+    level: mastered
+  - id: file-inspection
+    name: File Inspection & Search
+    level: mastered
+  - id: text-processing
+    name: Text Processing
+    level: proficient
+  - id: file-finding
+    name: File Finding
+    level: proficient
+  - id: bash-scripting
+    name: Bash Scripting
+    level: introduced
+  - id: log-analysis
+    name: Log Analysis
+    level: practices

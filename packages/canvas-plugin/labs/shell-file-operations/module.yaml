@@ -1,0 +1,226 @@
+title: File Operations and Inspection
+description: Learn to read, search, and manipulate files with Unix tools
+
+metadata:
+  category: shell
+  tags: [beginner, files, pipes, redirection]
+  estimatedMinutes: 20
+  difficulty: 1
+  course: shell-mastery
+  order: 2
+  prerequisites: [shell-navigation]
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to File Operations and Inspection!
+
+        Files are the foundation of Unix. Everything is a file - documents, logs,
+        even hardware devices. In this lab, you'll learn to:
+
+        - Read files with cat, head, and tail
+        - Search file contents with grep
+        - Chain commands together with pipes (|)
+        - Redirect output to files with > and >>
+
+        Sample files are ready in ~/data. Let's begin!
+
+  - id: display-file
+    title: Display File Contents
+    type: task
+    content:
+      instructions: |
+        The `cat` command displays the entire contents of a file.
+        (The name comes from "concatenate" - it can also join files together.)
+
+        Display the contents of ~/data/sample.txt
+      tasks:
+        - text: Use cat to show the file contents
+    hints:
+      - id: hint-1
+        text: "cat followed by the file path"
+      - id: hint-2
+        text: "cat ~/data/sample.txt"
+    solution:
+      command: cat ~/data/sample.txt
+      explanation: "cat prints the entire file to the terminal"
+    validation:
+      type: command-pattern
+      pattern: "cat\\s+(~/data/sample\\.txt|/home/student/data/sample\\.txt)"
+
+  - id: view-first-lines
+    title: View First Lines
+    type: task
+    content:
+      instructions: |
+        For large files, you might only want to see the beginning.
+        The `head` command shows the first lines of a file.
+
+        By default it shows 10 lines, but you can specify a number with -n.
+
+        Show only the first 5 lines of ~/data/long.txt
+      tasks:
+        - text: Use head to show the first 5 lines
+    hints:
+      - id: hint-1
+        text: "head shows the first part of a file"
+      - id: hint-2
+        text: "Use -n to specify the number of lines"
+      - id: hint-3
+        text: "head -n 5 ~/data/long.txt"
+    solution:
+      command: head -n 5 ~/data/long.txt
+      explanation: "-n 5 limits output to 5 lines. You can also write head -5 as a shortcut."
+    validation:
+      type: command-pattern
+      pattern: "head\\s+(-n\\s*5|-5)\\s+(~/data/long\\.txt|/home/student/data/long\\.txt)"
+
+  - id: search-with-grep
+    title: Search with Grep
+    type: task
+    content:
+      instructions: |
+        `grep` searches for patterns in files. It's one of the most useful Unix tools.
+
+        Basic usage: grep "pattern" filename
+
+        Search for the word "error" in ~/data/logs.txt
+      tasks:
+        - text: Find lines containing 'error' in logs.txt
+    hints:
+      - id: hint-1
+        text: "grep searches for text patterns"
+      - id: hint-2
+        text: "grep pattern filename"
+      - id: hint-3
+        text: "grep error ~/data/logs.txt"
+    solution:
+      command: grep error ~/data/logs.txt
+      explanation: "grep prints all lines that contain the search pattern"
+    validation:
+      type: command-pattern
+      pattern: "grep\\s+['\"]?error['\"]?\\s+(~/data/logs\\.txt|/home/student/data/logs\\.txt)"
+
+  - id: chain-with-pipe
+    title: Chain Commands with Pipe
+    type: task
+    content:
+      instructions: |
+        The pipe character `|` sends the output of one command as input to another.
+
+        This is incredibly powerful - you can chain commands to process data step by step.
+
+        Display sample.txt and search for lines containing 'test'
+      tasks:
+        - text: Combine cat and grep with a pipe
+    hints:
+      - id: hint-1
+        text: "The | character connects two commands"
+      - id: hint-2
+        text: "cat file | grep pattern"
+      - id: hint-3
+        text: "cat ~/data/sample.txt | grep test"
+    solution:
+      command: cat ~/data/sample.txt | grep test
+      explanation: "The output of cat becomes the input to grep. Pipes let you build processing pipelines."
+    validation:
+      type: command-pattern
+      pattern: "cat\\s+(~/data/sample\\.txt|/home/student/data/sample\\.txt)\\s*\\|\\s*grep\\s+['\"]?test['\"]?"
+
+  - id: redirect-output
+    title: Redirect Output to File
+    type: task
+    content:
+      instructions: |
+        The `>` operator redirects command output to a file (creating or overwriting it).
+
+        Save the results of searching for 'SUCCESS' in logs.txt to a file called results.txt
+      tasks:
+        - text: Use > to save grep output to results.txt
+    hints:
+      - id: hint-1
+        text: "command > filename saves output to a file"
+      - id: hint-2
+        text: "This will create a new file or overwrite an existing one"
+      - id: hint-3
+        text: "grep SUCCESS ~/data/logs.txt > ~/data/results.txt"
+    solution:
+      command: grep SUCCESS ~/data/logs.txt > ~/data/results.txt
+      explanation: "> creates/overwrites the file with the command's output"
+    validation:
+      type: check-script
+      script: check-redirect-output.sh
+      poll_interval: 2000
+
+  - id: append-output
+    title: Append to File
+    type: task
+    content:
+      instructions: |
+        The `>>` operator appends to a file instead of overwriting it.
+
+        Append the current date to results.txt
+      tasks:
+        - text: Use >> to append the date command output
+    hints:
+      - id: hint-1
+        text: ">> appends instead of overwriting"
+      - id: hint-2
+        text: "The date command outputs the current date/time"
+      - id: hint-3
+        text: "date >> ~/data/results.txt"
+    solution:
+      command: date >> ~/data/results.txt
+      explanation: ">> adds to the end of the file without removing existing content"
+    validation:
+      type: check-script
+      script: check-append-output.sh
+      poll_interval: 2000
+
+  - id: pipe-vs-redirect-quiz
+    title: Pipe vs Redirect
+    type: question
+    content:
+      question:
+        text: "What's the difference between | and >?"
+        type: single
+        options:
+          - id: opt-correct
+            text: "| sends output to another command, > sends to a file"
+            correct: true
+            feedback: "Exactly! Pipes connect commands, redirects write to files."
+          - id: opt-wrong-1
+            text: "They do the same thing"
+            correct: false
+            feedback: "No, they serve different purposes."
+          - id: opt-wrong-2
+            text: "> sends to another command, | sends to a file"
+            correct: false
+            feedback: "You have them reversed!"
+        explanation: |
+          - Pipe (|): Connects commands - output of left becomes input of right
+          - Redirect (>): Writes output to a file
+
+          Example: cat file | grep word | wc -l > count.txt
+          This chains three commands and saves the final result to a file.
+
+  - id: summary
+    title: Summary
+    type: summary
+    content:
+      instructions: |
+        Great work! You've learned essential file operations.
+
+        Key commands:
+        - `cat file` - display entire file
+        - `head -n N file` - show first N lines
+        - `tail -n N file` - show last N lines (try it!)
+        - `grep pattern file` - search for pattern
+        - `|` - pipe output to another command
+        - `>` - redirect output to file (overwrite)
+        - `>>` - append output to file
+
+        Next: Learn to transform text with "Text Processing with Unix Tools"

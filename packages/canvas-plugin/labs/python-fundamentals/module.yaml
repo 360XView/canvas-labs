@@ -1,0 +1,67 @@
+title: Python Fundamentals
+description: Learn Python basics with hands-on exercises
+labType: python
+
+steps:
+  - id: intro
+    title: Introduction
+    type: introduction
+    content:
+      instructions: |
+        Welcome to Python Fundamentals!
+
+        In this hands-on lab, you'll learn the basics of Python programming:
+        - Writing functions
+        - Using parameters and return values
+        - String formatting with f-strings
+        - Running tests to validate your code
+
+        You'll use VS Code to edit Python files and watch tests run automatically as you save.
+
+        Complete each task to progress through the lab.
+
+  - id: hello-world
+    title: Print Hello World
+    type: task
+    content:
+      instructions: |
+        Write a function called `hello()` that returns the string "Hello, World!".
+
+        This is your first Python function. It takes no parameters and simply returns a greeting.
+      tasks:
+        - text: Define the hello() function that returns "Hello, World!"
+    hints:
+      - "Start with: def hello():"
+      - "Use the return statement to send back a string"
+      - "The string should be exactly: Hello, World!"
+    solution:
+      file: solutions/main.py
+      range: "1-2"
+    validation:
+      type: pytest
+      test: tests/test_main.py::test_hello_world
+
+  - id: greet-name
+    title: Greet by Name
+    type: task
+    content:
+      instructions: |
+        Write a function called `greet(name)` that takes a name as a parameter and returns a greeting.
+
+        For example:
+        - greet("Alice") should return "Hello, Alice!"
+        - greet("Bob") should return "Hello, Bob!"
+
+        Use an f-string to format the greeting with the provided name.
+      tasks:
+        - text: Define the greet(name) function using an f-string
+    hints:
+      - "Start with: def greet(name):"
+      - "F-strings allow you to embed variables: f'text {variable}'"
+      - "The format should be: Hello, {name}!"
+    solution:
+      file: solutions/main.py
+      range: "4-5"
+    validation:
+      type: pytest
+      test: tests/test_main.py::test_greet
