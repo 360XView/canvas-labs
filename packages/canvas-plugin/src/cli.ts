@@ -371,11 +371,12 @@ program
   .command("present [presentationId]")
   .description("View a presentation in the terminal")
   .option("--list", "List available presentations")
+  .option("--file <path>", "Load presentation from a specific YAML file path")
   .action(async (presentationId: string | undefined, options) => {
-    const { loadPresentation, listPresentations } = await import("./presentation/loader");
+    const { loadPresentation, loadPresentationFromFile, listPresentations } = await import("./presentation/loader");
 
     // List mode
-    if (options.list || !presentationId) {
+    if (options.list) {
       const presentations = listPresentations();
       if (presentations.length === 0) {
         console.log("No presentations found in presentations/ directory");
@@ -395,9 +396,25 @@ program
 
     // Load and display presentation
     try {
-      const module = loadPresentation(presentationId);
+      let module;
+      let id;
+
+      if (options.file) {
+        // Load from specific file path
+        module = loadPresentationFromFile(options.file);
+        id = module.id;
+      } else if (presentationId) {
+        // Load from presentations/ directory by ID
+        module = loadPresentation(presentationId);
+        id = presentationId;
+      } else {
+        console.log("Usage: present <id> or present --file <path>");
+        console.log("       present --list to see available presentations");
+        return;
+      }
+
       const { renderCanvas } = await import("./canvases");
-      await renderCanvas("vta", presentationId, { module }, { scenario: "presentation" });
+      await renderCanvas("vta", id, { module }, { scenario: "presentation" });
     } catch (error) {
       console.error(`Error: ${error instanceof Error ? error.message : error}`);
       process.exit(1);

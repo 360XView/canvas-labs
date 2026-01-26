@@ -89,6 +89,48 @@ export function loadPresentation(presentationId: string): Module {
 }
 
 /**
+ * Load a presentation from a specific file path
+ */
+export function loadPresentationFromFile(filePath: string): Module {
+  const absolutePath = path.isAbsolute(filePath)
+    ? filePath
+    : path.resolve(process.cwd(), filePath);
+
+  if (!fs.existsSync(absolutePath)) {
+    throw new Error(`Presentation file not found: ${absolutePath}`);
+  }
+
+  const content = fs.readFileSync(absolutePath, "utf-8");
+  const parsed = yaml.load(content) as YamlPresentation;
+
+  if (!parsed || parsed.type !== "presentation") {
+    throw new Error(`Invalid presentation format in ${absolutePath}`);
+  }
+
+  // Derive ID from filename
+  const id = path.basename(absolutePath, ".yaml");
+
+  // Convert slides to VTA steps
+  const steps: Step[] = parsed.slides.map((slide) => ({
+    id: slide.id,
+    title: slide.title,
+    type: "slide" as const,
+    content: {
+      instructions: slide.content.instructions,
+      tryIt: slide.tryIt,
+    },
+    completed: false,
+  }));
+
+  return {
+    id,
+    title: parsed.title,
+    description: parsed.description,
+    steps,
+  };
+}
+
+/**
  * List all presentations with metadata
  */
 export function listPresentations(): Array<{
