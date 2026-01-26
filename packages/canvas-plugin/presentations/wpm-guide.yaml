@@ -106,6 +106,31 @@ slides:
 
         **Questions?** Ask WPM directly - it knows its own docs.
 
+  - id: create-agents
+    title: Creating Agents
+    content:
+      instructions: |
+        ## Create New Agents
+
+        WPM includes a blueprint for creating specialized Claude Code agents.
+
+        **Run `/wpm_create_agent` to create:**
+        - Product Manager agent
+        - QA/Testing agent
+        - DevOps agent
+        - Any custom agent you need
+
+        **Each agent includes:**
+        | Component | Purpose |
+        |-----------|---------|
+        | CLAUDE.md | Behavior & personality |
+        | Config | Targets, tools, paths |
+        | Skills | Slash commands |
+        | Launcher | Colored terminal + banner |
+
+        **Color themes:** Green (DevOps), Blue (Planning), Orange (QA), Purple (Creative)
+    tryIt: Run `/wpm_create_agent` to see the full blueprint
+
   - id: cheatsheet
     title: Quick Reference
     content:
@@ -116,12 +141,16 @@ slides:
         ┌─────────────────────────────────────────────────────────┐
         │  WPM QUICK REFERENCE                                    │
         ├─────────────────────────────────────────────────────────┤
-        │  COMMANDS                                               │
-        │  /wpm_status    Health check (runs on startup too)     │
-        │  /wpm_audit     Full ecosystem scan                    │
-        │  /wpm_clean     Remove .DS_Store, tmp, logs            │
-        │  /wpm_fix       Run pending fixes from audit           │
-        │  /wpm_report    Activity summary                       │
+        │  HEALTH & CLEANUP                                       │
+        │  /wpm_status       Health check (runs on startup)      │
+        │  /wpm_audit        Full ecosystem scan                 │
+        │  /wpm_clean        Remove .DS_Store, tmp, logs         │
+        │  /wpm_fix          Run pending fixes from audit        │
+        │  /wpm_report       Activity summary                    │
+        ├─────────────────────────────────────────────────────────┤
+        │  AGENT CREATION                                         │
+        │  /wpm_create_agent   Blueprint for new agents          │
+        │  /wpm_permissions    Configure agent permissions       │
         ├─────────────────────────────────────────────────────────┤
         │  PRINCIPLES                                             │
         │  • Asks before destructive actions                     │
