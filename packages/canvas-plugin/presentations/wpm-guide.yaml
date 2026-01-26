@@ -1,82 +1,144 @@
 title: Work Process Manager Guide
-description: Learn how to use the WPM agent for repo health management
+description: Learn how to use the WPM agent for repo health and creating new agents
 type: presentation
 
 slides:
-  - id: what-is-wpm
-    title: What is WPM?
+  # ============================================================================
+  # INTRODUCTION
+  # ============================================================================
+
+  - id: welcome
+    title: Welcome
     content:
       instructions: |
-        ## Work Process Manager
+        ## Work Process Manager (WPM)
 
-        Your repo hygiene assistant for the Canvas ecosystem.
-
-        **It watches over all projects and:**
-        - Detects uncommitted changes
-        - Finds deprecated/orphaned folders
-        - Identifies noise files (.DS_Store, backups)
-        - Tracks what's healthy vs needs attention
-
-        Think of it as a project health dashboard that also fixes things.
-
-  - id: when-to-use
-    title: When to Use It
-    content:
-      instructions: |
-        ## When to Start WPM
-
-        | Scenario | Why |
-        |----------|-----|
-        | Begin your work day | Quick health check |
-        | Return after time away | "What state did I leave things?" |
-        | Before major commits | Ensure nothing's forgotten |
-        | Weekly cleanup | Remove noise, archive old work |
-        | Onboarding new project | Register it in the ecosystem |
-
-  - id: getting-started
-    title: Getting Started
-    content:
-      instructions: |
-        ## Getting Started
-
-        WPM lives in: `Canvas/_Team/Proc_Mgr`
-
-        On startup, it automatically runs a quick health check:
+        Your **two-in-one** assistant for the Canvas ecosystem:
 
         ```
-        ┌──────────────┬───────────────────────────┐
-        │ Project      │ Status                    │
-        ├──────────────┼───────────────────────────┤
-        │ canvas-labs  │ ✓ clean                   │
-        │ old-poc      │ ⚠ 3 uncommitted files     │
-        └──────────────┴───────────────────────────┘
+        ┌─────────────────────────────────────────────────────────┐
+        │                                                         │
+        │   🔧 REPO HEALTH          🤖 AGENT CREATION            │
+        │   ─────────────          ───────────────               │
+        │   • Health checks        • Create new agents           │
+        │   • Cleanup noise        • Custom behaviors            │
+        │   • Audit structure      • Skills & commands           │
+        │   • Track projects       • Visual identity             │
+        │                                                         │
+        └─────────────────────────────────────────────────────────┘
         ```
 
-        No action needed - just awareness in ~2 seconds.
+        This guide covers both powers.
+
+  - id: two-powers
+    title: Two Powers
+    content:
+      instructions: |
+        ## WPM's Two Powers
+
+        **Power 1: Repo Health Management**
+        Keep your codebase clean and organized.
+        - Detect uncommitted changes across projects
+        - Find and remove noise files
+        - Track deprecated/orphaned folders
+        - Maintain consistency
+
+        **Power 2: Agent Creation**
+        Build specialized Claude Code agents.
+        - Product Manager, QA, DevOps agents
+        - Custom behaviors and personalities
+        - Slash commands and skills
+        - Colored terminals with banners
+
+        *Let's explore each power...*
+
+  # ============================================================================
+  # PART 1: REPO HEALTH
+  # ============================================================================
+
+  - id: health-intro
+    title: "Part 1: Repo Health"
+    content:
+      instructions: |
+        ## Part 1: Repo Health Management
+
+        ```
+        ┌─────────────────────────────────────────────────────────┐
+        │                    REPO HEALTH                          │
+        └─────────────────────────────────────────────────────────┘
+        ```
+
+        WPM watches over all projects in `26Q1/Canvas/` and:
+
+        - **Detects** uncommitted changes
+        - **Finds** deprecated/orphaned folders
+        - **Identifies** noise files (.DS_Store, backups, tmp)
+        - **Tracks** what's healthy vs needs attention
+
+        Think of it as a **project health dashboard** that also fixes things.
+
+  - id: health-when
+    title: When to Use
+    content:
+      instructions: |
+        ## When to Run Health Commands
+
+        | Scenario | Why | Command |
+        |----------|-----|---------|
+        | Start your day | Quick awareness | `/wpm_status` |
+        | Return after break | "What state are things?" | `/wpm_status` |
+        | Before commits | Nothing forgotten? | `/wpm_audit` |
+        | Weekly cleanup | Remove noise | `/wpm_clean` |
+        | New project | Register it | `/add-project` |
+
+        WPM runs a **quick health check on startup** automatically.
+
+  - id: health-startup
+    title: On Startup
+    content:
+      instructions: |
+        ## What Happens on Startup
+
+        WPM automatically runs a ~2 second health check:
+
+        ```
+        Quick Health Check:
+        ┌──────────────┬───────────────────────────────┐
+        │ Project      │ Status                        │
+        ├──────────────┼───────────────────────────────┤
+        │ canvas-labs  │ ✓ clean                       │
+        │ experiment-x │ ⚠ 3 uncommitted files         │
+        │ old-poc      │ ✗ no remote configured!       │
+        └──────────────┴───────────────────────────────┘
+        ```
+
+        No action needed - just **instant awareness**.
     tryIt: Open Claude Code in the Proc_Mgr folder
 
-  - id: core-commands
-    title: Core Commands
+  - id: health-commands
+    title: Health Commands
     content:
       instructions: |
-        ## Core Commands
+        ## Health Commands
 
         | Command | What it does |
         |---------|--------------|
         | `/wpm_status` | Quick health check (re-run startup scan) |
-        | `/wpm_audit` | Full ecosystem scan - structure, noise, issues |
-        | `/wpm_clean` | Remove safe-to-delete files (.DS_Store, tmp) |
+        | `/wpm_audit` | **Full** ecosystem scan - structure, noise, issues |
+        | `/wpm_clean` | Remove safe files (.DS_Store, tmp, logs) |
         | `/wpm_fix` | Execute pending fixes from last audit |
         | `/wpm_report` | Activity summary (today/week/month) |
+
+        **Flow:** `status` → `audit` → `fix` or `clean`
     tryIt: Run `/wpm_status` to see current state
 
-  - id: principles
-    title: Key Principles
+  - id: health-principles
+    title: Safety Principles
     content:
       instructions: |
-        ## Key Principles
+        ## Safety Principles
 
-        WPM follows these rules:
+        WPM follows strict rules to protect your work:
 
         **✓ ASK before destructive actions**
         Delete, force push, remove branches → needs your OK
@@ -90,73 +152,270 @@ slides:
         **✓ Log everything**
         All actions recorded in `logs/activity.jsonl`
 
-  - id: try-it
-    title: Try It Yourself
+  - id: health-try
+    title: Try Health Commands
     content:
       instructions: |
-        ## Try It Yourself
+        ## Try It: Health Commands
 
-        Your turn! Run these in order:
+        Run these in order:
 
-        1. `/wpm_status` — See the health check
-        2. `/wpm_audit` — Run a full scan
-        3. `/wpm_clean` — Clean up noise files
+        ```
+        1. /wpm_status     → See the quick health check
+        2. /wpm_audit      → Run a full ecosystem scan
+        3. /wpm_clean      → Clean up noise files
+        ```
 
-        WPM will explain what it finds and ask before any changes.
+        WPM will:
+        - Explain what it finds
+        - Ask before any destructive changes
+        - Show results after each action
 
-        **Questions?** Ask WPM directly - it knows its own docs.
+        **Tip:** Just ask in plain English too!
+        "Check repo health" or "clean up old files"
 
-  - id: create-agents
-    title: Creating Agents
+  # ============================================================================
+  # PART 2: AGENT CREATION
+  # ============================================================================
+
+  - id: agents-intro
+    title: "Part 2: Agent Creation"
     content:
       instructions: |
-        ## Create New Agents
-
-        WPM includes a blueprint for creating specialized Claude Code agents.
-
-        **Run `/wpm_create_agent` to create:**
-        - Product Manager agent
-        - QA/Testing agent
-        - DevOps agent
-        - Any custom agent you need
-
-        **Each agent includes:**
-        | Component | Purpose |
-        |-----------|---------|
-        | CLAUDE.md | Behavior & personality |
-        | Config | Targets, tools, paths |
-        | Skills | Slash commands |
-        | Launcher | Colored terminal + banner |
-
-        **Color themes:** Green (DevOps), Blue (Planning), Orange (QA), Purple (Creative)
-    tryIt: Run `/wpm_create_agent` to see the full blueprint
-
-  - id: cheatsheet
-    title: Quick Reference
-    content:
-      instructions: |
-        ## Quick Reference
+        ## Part 2: Creating Agents
 
         ```
         ┌─────────────────────────────────────────────────────────┐
-        │  WPM QUICK REFERENCE                                    │
+        │                   AGENT CREATION                        │
+        └─────────────────────────────────────────────────────────┘
+        ```
+
+        WPM includes a **complete blueprint** for creating specialized
+        Claude Code agents.
+
+        An "agent" is a Claude configuration that activates when you
+        open Claude Code from a specific folder.
+
+        **Examples:**
+        - Product Manager agent (planning, specs)
+        - QA agent (testing, evaluation)
+        - DevOps agent (deployment, monitoring)
+        - Your custom agent (anything you need)
+
+  - id: agents-why
+    title: Why Create Agents?
+    content:
+      instructions: |
+        ## Why Create Agents?
+
+        **Without agents:** Claude is a general assistant.
+        **With agents:** Claude becomes a specialist.
+
+        | General Claude | Specialized Agent |
+        |----------------|-------------------|
+        | "I can help with anything" | "I'm your QA specialist" |
+        | No project context | Knows your codebase |
+        | Generic commands | Custom `/qa_test`, `/qa_report` |
+        | Standard terminal | Orange theme, QA banner |
+
+        Agents give Claude:
+        - **Focus** - knows its role
+        - **Context** - knows its targets
+        - **Tools** - custom commands
+        - **Identity** - visual distinction
+
+  - id: agents-components
+    title: Agent Components
+    content:
+      instructions: |
+        ## What's in an Agent?
+
+        ```
+        AgentName/
+        ├── CLAUDE.md              ← Behavior & personality
+        ├── agent-config.yaml      ← Targets, tools, paths
+        ├── .claude/
+        │   ├── settings.local.json  ← Permissions
+        │   └── skills/
+        │       ├── prefix_help/     ← Help command
+        │       ├── prefix_status/   ← Status command
+        │       └── prefix_action/   ← Main commands
+        └── launcher/
+            └── AgentName.app/     ← Colored terminal
+        ```
+
+        **CLAUDE.md** = What the agent does
+        **Config** = What it operates on
+        **Skills** = Slash commands
+        **Launcher** = Visual identity
+
+  - id: agents-themes
+    title: Agent Themes
+    content:
+      instructions: |
+        ## Visual Themes
+
+        Each agent gets a **colored terminal** for instant recognition:
+
+        | Theme | Color | Best For |
+        |-------|-------|----------|
+        | 🟢 Green | Dark green bg | DevOps, Process, WPM |
+        | 🔵 Blue | Dark blue bg | Planning, Docs |
+        | 🟠 Orange | Dark orange bg | QA, Testing |
+        | 🟣 Purple | Dark purple bg | Creative, Design |
+        | 🔴 Red | Dark red bg | Alerts, Critical |
+
+        Plus a **banner** showing:
+        - Agent name and role
+        - Available commands
+        - Config location
+
+  - id: agents-process
+    title: Creation Process
+    content:
+      instructions: |
+        ## How to Create an Agent
+
+        **Step 1: Design**
+        - What's its role? (QA Lead, Product Manager)
+        - What does it operate on? (repos, labs, services)
+        - What commands does it need?
+
+        **Step 2: Create Structure**
+        - Run `/wpm_create_agent` for the full blueprint
+        - Create folder in `_Team/AgentName/`
+        - Add CLAUDE.md, config, skills
+
+        **Step 3: Add Launcher**
+        - Create AppleScript app
+        - Set colors and banner
+        - Place in `launcher/`
+
+        **Step 4: Test**
+        - Open from launcher
+        - Verify commands work
+        - Check it stays in scope
+    tryIt: Run `/wpm_create_agent` to see the full blueprint
+
+  - id: agents-example
+    title: Example Agents
+    content:
+      instructions: |
+        ## Example Agents
+
+        **WPM (this agent)**
+        - Role: Repo health manager
+        - Theme: Green
+        - Commands: `/wpm_status`, `/wpm_audit`, `/wpm_clean`
+
+        **EvalLead**
+        - Role: Lab evaluation specialist
+        - Theme: Orange
+        - Commands: `/el_eval`, `/el_capture`, `/el_report`
+
+        **Your Agent?**
+        - Role: _________________
+        - Theme: _________________
+        - Commands: `/_____`, `/_____`, `/_____`
+
+        *What would YOU automate?*
+
+  - id: agents-try
+    title: Try Agent Creation
+    content:
+      instructions: |
+        ## Try It: Create an Agent
+
+        **Option 1: Read the blueprint**
+        ```
+        /wpm_create_agent
+        ```
+        Get the complete step-by-step guide.
+
+        **Option 2: Ask for help**
+        ```
+        "Help me create a QA agent"
+        "I want an agent for managing deployments"
+        ```
+        WPM will guide you through the process.
+
+        **Option 3: Copy existing**
+        Look at `_Team/Proc_Mgr/` or `_Team/EvalLead/`
+        and modify for your needs.
+
+  # ============================================================================
+  # REFERENCE
+  # ============================================================================
+
+  - id: ref-health
+    title: "Ref: Health Commands"
+    content:
+      instructions: |
+        ## Quick Reference: Health
+
+        ```
+        ┌─────────────────────────────────────────────────────────┐
+        │  HEALTH COMMANDS                                        │
         ├─────────────────────────────────────────────────────────┤
-        │  HEALTH & CLEANUP                                       │
-        │  /wpm_status       Health check (runs on startup)      │
-        │  /wpm_audit        Full ecosystem scan                 │
-        │  /wpm_clean        Remove .DS_Store, tmp, logs         │
-        │  /wpm_fix          Run pending fixes from audit        │
-        │  /wpm_report       Activity summary                    │
-        ├─────────────────────────────────────────────────────────┤
-        │  AGENT CREATION                                         │
-        │  /wpm_create_agent   Blueprint for new agents          │
-        │  /wpm_permissions    Configure agent permissions       │
+        │  /wpm_status     Quick health check                    │
+        │  /wpm_audit      Full ecosystem scan                   │
+        │  /wpm_clean      Remove noise files                    │
+        │  /wpm_fix        Execute pending fixes                 │
+        │  /wpm_report     Activity summary                      │
         ├─────────────────────────────────────────────────────────┤
         │  PRINCIPLES                                             │
         │  • Asks before destructive actions                     │
         │  • Archive don't delete (when uncertain)               │
-        │  • Logs everything to logs/activity.jsonl              │
-        ├─────────────────────────────────────────────────────────┤
-        │  LOCATION: Canvas/_Team/Proc_Mgr                       │
+        │  • Logs to logs/activity.jsonl                         │
         └─────────────────────────────────────────────────────────┘
         ```
+
+  - id: ref-agents
+    title: "Ref: Agent Creation"
+    content:
+      instructions: |
+        ## Quick Reference: Agents
+
+        ```
+        ┌─────────────────────────────────────────────────────────┐
+        │  AGENT COMMANDS                                         │
+        ├─────────────────────────────────────────────────────────┤
+        │  /wpm_create_agent   Full creation blueprint           │
+        │  /wpm_permissions    Configure agent permissions       │
+        ├─────────────────────────────────────────────────────────┤
+        │  AGENT STRUCTURE                                        │
+        │  CLAUDE.md           Behavior instructions             │
+        │  agent-config.yaml   Targets and tools                 │
+        │  .claude/skills/     Slash commands                    │
+        │  launcher/           Colored terminal app              │
+        ├─────────────────────────────────────────────────────────┤
+        │  THEMES                                                 │
+        │  Green=DevOps  Blue=Planning  Orange=QA  Purple=Design │
+        └─────────────────────────────────────────────────────────┘
+        ```
+
+  - id: ref-location
+    title: "Ref: Location"
+    content:
+      instructions: |
+        ## Quick Reference: Location
+
+        ```
+        ┌─────────────────────────────────────────────────────────┐
+        │  WPM LOCATION                                           │
+        ├─────────────────────────────────────────────────────────┤
+        │                                                         │
+        │  📁 Canvas/_Team/Proc_Mgr/                             │
+        │     ├── CLAUDE.md          ← This agent's behavior     │
+        │     ├── wpm-config.yaml    ← Known projects            │
+        │     ├── logs/              ← Activity logs             │
+        │     └── .claude/skills/    ← All WPM commands          │
+        │                                                         │
+        │  📁 Canvas/_Team/          ← Other agents live here    │
+        │     ├── EvalLead/                                      │
+        │     └── [YourAgent]/                                   │
+        │                                                         │
+        └─────────────────────────────────────────────────────────┘
+        ```
+
+        **To start WPM:** Open Claude Code in the Proc_Mgr folder
