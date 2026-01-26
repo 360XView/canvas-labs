@@ -13,7 +13,7 @@
  * - Output is captured correctly
  *
  * Prerequisites:
- * - Canvas installed at /Users/taavi/.claude/plugins/cache/claude-canvas/canvas/0.1.0
+ * - Canvas installed at /Users/taavi/Documents/Main_Docs/3_Code/26Q1/canvas-labs/packages/canvas-plugin
  * - Docker running
  * - tmux installed
  *
@@ -22,7 +22,7 @@
  */
 
 import { createCanvasAdapter } from "../adapters/index.js";
-import { TUITestRunner } from "../core/tui-test-runner.js";
+import { TUITestRunner } from "../src/tui-test-runner.js";
 
 const test = async () => {
   console.log("[canvas-vta-test] Starting Canvas vTA lab test...");

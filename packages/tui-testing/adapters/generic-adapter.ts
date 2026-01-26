@@ -20,7 +20,7 @@ import { execFile } from "child_process";
 import { promisify } from "util";
 
 import type { TUIAppAdapter, LaunchOptions, LaunchResult } from "./adapter-interface";
-import * as tmux from "../core/tmux-controller";
+import * as tmux from "../src/tmux-controller";
 
 const execFileAsync = promisify(execFile);
 

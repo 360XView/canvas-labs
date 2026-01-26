@@ -10,7 +10,7 @@
  * - Pane 1: Docker container (target for commands)
  *
  * Lab modules are located at:
- * /Users/taavi/.claude/plugins/cache/claude-canvas/canvas/0.1.0/labs/{moduleId}/module.yaml
+ * /Users/taavi/Documents/Main_Docs/3_Code/26Q1/canvas-labs/packages/canvas-plugin/labs/{moduleId}/module.yaml
  */
 
 // @ts-ignore - Node.js built-in modules lack TypeScript definitions when used as ESM
@@ -23,7 +23,7 @@ import { readdir, stat } from "fs/promises";
 import { spawn } from "child_process";
 
 import type { TUIAppAdapter, LaunchOptions, LaunchResult } from "./adapter-interface";
-import * as tmux from "../core/tmux-controller";
+import * as tmux from "../src/tmux-controller";
 
 const execFileAsync = promisify(execFile);
 
@@ -73,7 +73,7 @@ export class CanvasAdapter implements TUIAppAdapter {
     this.canvasPath =
       config.canvasPath ||
       process.env.CANVAS_HOME ||
-      "/Users/taavi/.claude/plugins/cache/claude-canvas/canvas/0.1.0";
+      "/Users/taavi/Documents/Main_Docs/3_Code/26Q1/canvas-labs/packages/canvas-plugin";
     this.noTutor = config.noTutor || false;
     this.verbose = config.verbose || false;
   }
