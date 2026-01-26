@@ -1,0 +1,133 @@
+title: Work Process Manager Guide
+description: Learn how to use the WPM agent for repo health management
+type: presentation
+
+slides:
+  - id: what-is-wpm
+    title: What is WPM?
+    content:
+      instructions: |
+        ## Work Process Manager
+
+        Your repo hygiene assistant for the Canvas ecosystem.
+
+        **It watches over all projects and:**
+        - Detects uncommitted changes
+        - Finds deprecated/orphaned folders
+        - Identifies noise files (.DS_Store, backups)
+        - Tracks what's healthy vs needs attention
+
+        Think of it as a project health dashboard that also fixes things.
+
+  - id: when-to-use
+    title: When to Use It
+    content:
+      instructions: |
+        ## When to Start WPM
+
+        | Scenario | Why |
+        |----------|-----|
+        | Begin your work day | Quick health check |
+        | Return after time away | "What state did I leave things?" |
+        | Before major commits | Ensure nothing's forgotten |
+        | Weekly cleanup | Remove noise, archive old work |
+        | Onboarding new project | Register it in the ecosystem |
+
+  - id: getting-started
+    title: Getting Started
+    content:
+      instructions: |
+        ## Getting Started
+
+        WPM lives in: `Canvas/_Team/Proc_Mgr`
+
+        On startup, it automatically runs a quick health check:
+
+        ```
+        ┌──────────────┬───────────────────────────┐
+        │ Project      │ Status                    │
+        ├──────────────┼───────────────────────────┤
+        │ canvas-labs  │ ✓ clean                   │
+        │ old-poc      │ ⚠ 3 uncommitted files     │
+        └──────────────┴───────────────────────────┘
+        ```
+
+        No action needed - just awareness in ~2 seconds.
+    tryIt: Open Claude Code in the Proc_Mgr folder
+
+  - id: core-commands
+    title: Core Commands
+    content:
+      instructions: |
+        ## Core Commands
+
+        | Command | What it does |
+        |---------|--------------|
+        | `/wpm_status` | Quick health check (re-run startup scan) |
+        | `/wpm_audit` | Full ecosystem scan - structure, noise, issues |
+        | `/wpm_clean` | Remove safe-to-delete files (.DS_Store, tmp) |
+        | `/wpm_fix` | Execute pending fixes from last audit |
+        | `/wpm_report` | Activity summary (today/week/month) |
+    tryIt: Run `/wpm_status` to see current state
+
+  - id: principles
+    title: Key Principles
+    content:
+      instructions: |
+        ## Key Principles
+
+        WPM follows these rules:
+
+        **✓ ASK before destructive actions**
+        Delete, force push, remove branches → needs your OK
+
+        **✓ Archive, don't delete (when uncertain)**
+        Moves to `_archive/` instead of permanent deletion
+
+        **✓ Verify changes**
+        Runs tests, takes screenshots, confirms success
+
+        **✓ Log everything**
+        All actions recorded in `logs/activity.jsonl`
+
+  - id: try-it
+    title: Try It Yourself
+    content:
+      instructions: |
+        ## Try It Yourself
+
+        Your turn! Run these in order:
+
+        1. `/wpm_status` — See the health check
+        2. `/wpm_audit` — Run a full scan
+        3. `/wpm_clean` — Clean up noise files
+
+        WPM will explain what it finds and ask before any changes.
+
+        **Questions?** Ask WPM directly - it knows its own docs.
+
+  - id: cheatsheet
+    title: Quick Reference
+    content:
+      instructions: |
+        ## Quick Reference
+
+        ```
+        ┌─────────────────────────────────────────────────────────┐
+        │  WPM QUICK REFERENCE                                    │
+        ├─────────────────────────────────────────────────────────┤
+        │  COMMANDS                                               │
+        │  /wpm_status    Health check (runs on startup too)     │
+        │  /wpm_audit     Full ecosystem scan                    │
+        │  /wpm_clean     Remove .DS_Store, tmp, logs            │
+        │  /wpm_fix       Run pending fixes from audit           │
+        │  /wpm_report    Activity summary                       │
+        ├─────────────────────────────────────────────────────────┤
+        │  PRINCIPLES                                             │
+        │  • Asks before destructive actions                     │
+        │  • Archive don't delete (when uncertain)               │
+        │  • Logs everything to logs/activity.jsonl              │
+        ├─────────────────────────────────────────────────────────┤
+        │  LOCATION: Canvas/_Team/Proc_Mgr                       │
+        └─────────────────────────────────────────────────────────┘
+        ```

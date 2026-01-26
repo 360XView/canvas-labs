@@ -46,6 +46,7 @@ interface YamlStepContent {
   instructions?: string;
   tasks?: YamlTask[];
   question?: YamlQuestion;
+  tryIt?: string;
 }
 
 interface YamlQuestion {
@@ -251,6 +252,7 @@ function convertStep(yamlStep: YamlStep): Step {
     hints: convertHints(yamlStep.hints, yamlStep.id),
     solution: convertSolution(yamlStep.solution),
     question: convertQuestion(yamlStep.content.question),
+    tryIt: yamlStep.content.tryIt,
   };
 
   return {

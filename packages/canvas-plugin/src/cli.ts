@@ -368,6 +368,43 @@ program
   });
 
 program
+  .command("present [presentationId]")
+  .description("View a presentation in the terminal")
+  .option("--list", "List available presentations")
+  .action(async (presentationId: string | undefined, options) => {
+    const { loadPresentation, listPresentations } = await import("./presentation/loader");
+
+    // List mode
+    if (options.list || !presentationId) {
+      const presentations = listPresentations();
+      if (presentations.length === 0) {
+        console.log("No presentations found in presentations/ directory");
+        return;
+      }
+      console.log("Available presentations:\n");
+      for (const pres of presentations) {
+        console.log(`  ${pres.id}`);
+        console.log(`    ${pres.title} (${pres.slideCount} slides)`);
+        if (pres.description) {
+          console.log(`    ${pres.description}`);
+        }
+        console.log();
+      }
+      return;
+    }
+
+    // Load and display presentation
+    try {
+      const module = loadPresentation(presentationId);
+      const { renderCanvas } = await import("./canvases");
+      await renderCanvas("vta", presentationId, { module }, { scenario: "presentation" });
+    } catch (error) {
+      console.error(`Error: ${error instanceof Error ? error.message : error}`);
+      process.exit(1);
+    }
+  });
+
+program
   .command("lab-list")
   .description("List available lab modules")
   .action(async () => {

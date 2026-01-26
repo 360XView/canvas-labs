@@ -19,7 +19,7 @@ export interface Module {
 export interface Step {
   id: string;
   title: string;
-  type: "introduction" | "task" | "question" | "summary";
+  type: "introduction" | "task" | "question" | "summary" | "slide";
   content: StepContent;
   completed?: boolean;
 }
@@ -30,6 +30,7 @@ export interface StepContent {
   hints?: Hint[];
   solution?: Solution;
   question?: Question;
+  tryIt?: string;  // "Try it" prompt for presentations
 }
 
 export interface TaskItem {

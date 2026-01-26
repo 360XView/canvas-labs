@@ -54,6 +54,14 @@ export function TaskPanel({
           </Box>
         )}
 
+        {/* Try It prompt for presentations */}
+        {step.content.tryIt && (
+          <Box marginTop={1} paddingX={1} borderStyle="round" borderColor="yellow">
+            <Text color="yellow">💡 Try it: </Text>
+            <Text>{step.content.tryIt}</Text>
+          </Box>
+        )}
+
         {/* Tasks */}
         {step.content.tasks && step.content.tasks.length > 0 && (
           <TaskList tasks={step.content.tasks} width={contentWidth} />
@@ -68,22 +76,27 @@ export function TaskPanel({
           />
         )}
 
-        {/* Hints */}
-        {step.content.hints && step.content.hints.length > 0 && (
-          <HintsSection
-            hints={step.content.hints}
-            hintsRevealed={hintsRevealed}
-            width={contentWidth}
-          />
-        )}
+        {/* Hints and Solution - hidden for slide type steps */}
+        {step.type !== "slide" && (
+          <>
+            {/* Hints */}
+            {step.content.hints && step.content.hints.length > 0 && (
+              <HintsSection
+                hints={step.content.hints}
+                hintsRevealed={hintsRevealed}
+                width={contentWidth}
+              />
+            )}
 
-        {/* Solution */}
-        {step.content.solution && (
-          <SolutionSection
-            solution={step.content.solution}
-            revealed={solutionRevealed}
-            width={contentWidth}
-          />
+            {/* Solution */}
+            {step.content.solution && (
+              <SolutionSection
+                solution={step.content.solution}
+                revealed={solutionRevealed}
+                width={contentWidth}
+              />
+            )}
+          </>
         )}
       </Box>
 

@@ -448,6 +448,16 @@ export function VTACanvas({
         }
       }
     }
+
+    // Number keys (1-9) for direct slide navigation
+    // Only when not in a question step (where numbers select options)
+    if (!currentStep.content.question) {
+      const slideNum = parseInt(input);
+      if (slideNum >= 1 && slideNum <= 9 && slideNum <= module.steps.length) {
+        setCurrentStepIndex(slideNum - 1);
+        return;
+      }
+    }
   });
 
   // Layout calculations
