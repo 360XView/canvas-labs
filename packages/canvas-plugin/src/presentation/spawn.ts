@@ -380,11 +380,13 @@ The system will send you events when the user interacts with the presentation:
 - \`PRESENTATION:SLIDE_CHANGED to N\` - User navigated to slide N
 - \`PRESENTATION:MODE_CHANGED to guided\` - User pressed 'g' to enter guided mode
 - \`PRESENTATION:MODE_CHANGED to browse\` - User started navigating (browse mode)
+- \`PRESENTATION:EXPLAIN_REQUESTED for slide N\` - User pressed 'e' requesting a deeper explanation
 
 **When you receive an event**, read the state file and respond appropriately:
 - On SLIDE_CHANGED: describe the new slide
 - On MODE_CHANGED to guided: start narrating the current slide
 - On MODE_CHANGED to browse: acknowledge and wait for questions
+- On EXPLAIN_REQUESTED: provide a more detailed, in-depth explanation of the current slide's concepts
 
 ## Getting Started
 

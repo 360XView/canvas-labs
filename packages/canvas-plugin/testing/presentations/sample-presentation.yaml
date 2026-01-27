@@ -1,0 +1,93 @@
+# Sample presentation for testing
+# Use with: bun run src/cli.ts present --file testing/presentations/sample-presentation.yaml
+
+title: Test Presentation
+type: interactive-presentation
+slides:
+  - id: slide-1-welcome
+    title: Welcome
+    content:
+      instructions: |
+        This is a test presentation for verifying interactive features.
+
+        Press the following keys to test:
+        - Arrow keys to navigate
+        - 'g' for guided mode
+        - 'e' for explain mode
+        - 'q' to quit
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "This is a test presentation for verifying interactive features."
+        - id: 1
+          type: sentence
+          text: "Press the following keys to test."
+        - id: 2
+          type: bullet
+          text: "Arrow keys to navigate"
+        - id: 3
+          type: bullet
+          text: "'g' for guided mode"
+        - id: 4
+          type: bullet
+          text: "'e' for explain mode"
+        - id: 5
+          type: bullet
+          text: "'q' to quit"
+
+  - id: slide-2-features
+    title: Feature Test
+    content:
+      instructions: |
+        Test segment highlighting here.
+
+        The Tutor can highlight individual segments.
+        Each segment can be a sentence, bullet, or code block.
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "Test segment highlighting here."
+        - id: 1
+          type: sentence
+          text: "The Tutor can highlight individual segments."
+        - id: 2
+          type: sentence
+          text: "Each segment can be a sentence, bullet, or code block."
+
+  - id: slide-3-code
+    title: Code Example
+    content:
+      instructions: |
+        Here's a code example:
+
+        ```javascript
+        console.log("Hello from the presentation!");
+        ```
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "Here's a code example."
+        - id: 1
+          type: code
+          text: |
+            console.log("Hello from the presentation!");
+
+  - id: slide-4-end
+    title: Test Complete
+    content:
+      instructions: |
+        You've reached the end of the test presentation.
+
+        Check the state file to verify everything worked:
+        cat /tmp/presentation-logs-*/presentation-state.json
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "You've reached the end of the test presentation."
+        - id: 1
+          type: sentence
+          text: "Check the state file to verify everything worked."

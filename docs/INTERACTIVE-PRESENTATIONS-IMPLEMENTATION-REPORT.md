@@ -2,17 +2,24 @@
 
 ## Summary
 
-**Status: ✅ COMPLETE (with post-implementation fixes)**
+**Status: ✅ COMPLETE (MVP + enhancements)**
 
 Implemented MVP for interactive presentations with:
 - Markdown → YAML generator
 - VTA with segment highlighting
 - Bidirectional Tutor ↔ VTA communication
 - Guided/Browse modes
+- Real-time event notifications to Claude
+- Deeper explanation mode ('e' key)
 
 **Commits:**
-- `788915f` feat: add interactive presentations with Tutor narration (13 files, 1453 insertions)
-- `309e298` fix: complete end-to-end interactive presentation state sync (4 files, 158 insertions)
+- `788915f` feat: add interactive presentations with Tutor narration
+- `309e298` fix: complete end-to-end interactive presentation state sync
+- `5c145b2` feat: add Tutor slide navigation commands
+- `24440ec` fix: change presentation layout to Claude left, VTA right
+- `e3bc8fb` fix: use unique command IDs with $RANDOM in tutor commands
+- `1bb5f29` fix: add human-readable slideNumber (1-indexed) to state
+- `9c4d2a2` feat: send PRESENTATION events to Claude via tmux
 
 ---
 
@@ -139,19 +146,22 @@ Issues discovered during testing:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         tmux session                            │
-├─────────────────────────────────────────────────────────────────┤
-│  VTA Canvas (interactive-presentation scenario)                 │
-│  ┌─────────────────────────────────────────────────────────────┐│
-│  │ Sidebar │ Slide Content with Highlighted Segments   GUIDED ││
-│  │         │ • Segment 0                                       ││
-│  │         │ • [Segment 1 - highlighted]                       ││
-│  │         │ • Segment 2                                       ││
-│  └─────────────────────────────────────────────────────────────┘│
-├─────────────────────────────────────────────────────────────────┤
-│  Claude Code (Tutor) with presenting-tutor CLAUDE.md           │
-└─────────────────────────────────────────────────────────────────┘
+├───────────────────────────┬─────────────────────────────────────┤
+│  Claude Code (Tutor)      │  VTA Canvas                         │
+│                           │  ┌─────────────────────────────────┐│
+│  Receives events:         │  │ Slide Content          GUIDED  ││
+│  • SLIDE_CHANGED          │  │ • Segment 0                     ││
+│  • MODE_CHANGED           │  │ • [Segment 1 - highlighted]     ││
+│  • EXPLAIN_REQUESTED      │  │ • Segment 2                     ││
+│                           │  └─────────────────────────────────┘│
+│  Sends commands:          │  User keys:                         │
+│  • highlight              │  • ←/→ Navigate (BROWSE)            │
+│  • nextSlide              │  • g = Guided mode                  │
+│  • previousSlide          │  • e = Explain (deeper)             │
+│  • navigateToSlide        │  • q = Quit                         │
+└───────────────────────────┴─────────────────────────────────────┘
 
-                    ↕ State Sync
+                    ↕ State Sync + Events
 
 ┌─────────────────────────────────────────────────────────────────┐
 │                  /tmp/presentation-logs-{id}/                   │
@@ -160,12 +170,12 @@ Issues discovered during testing:
 │  └── presentation-full.json   (Full slide reference)           │
 └─────────────────────────────────────────────────────────────────┘
 
-                    ↕ IPC (Unix Socket)
+        ↕ IPC (Unix Socket)              ↕ tmux send-keys
 
 ┌─────────────────────────────────────────────────────────────────┐
 │  Watcher Process                                                │
-│  - Monitors tutor-commands.json                                 │
-│  - Sends highlight/clearHighlight to VTA via socket             │
+│  - Monitors tutor-commands.json → sends to VTA via socket       │
+│  - Monitors presentation-state.json → sends events to Claude    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -193,6 +203,94 @@ Issues discovered during testing:
 
 ---
 
+## Post-MVP Enhancements (Session 2)
+
+After initial MVP testing, the following enhancements were added:
+
+### Tutor Navigation Commands ✅
+
+Tutor can now control VTA slide navigation by writing commands to `tutor-commands.json`:
+
+| Command | Description |
+|---------|-------------|
+| `nextSlide` | Advance to next slide |
+| `previousSlide` | Go back one slide |
+| `navigateToSlide` | Jump to specific slide (0-indexed) |
+
+**Files modified:** `watcher.ts`, `ipc/types.ts`, `vta.tsx`
+
+---
+
+### Layout Change ✅
+
+Changed from vertical split (VTA top, Tutor bottom) to horizontal split:
+
+```
+┌──────────────────────┬─────────────────────────────────┐
+│ Claude Code (Tutor)  │  VTA Canvas                     │
+│                      │  ┌─────────────────────────────┐│
+│ Narrates slides,     │  │ Slide Content      GUIDED   ││
+│ answers questions    │  │ • Segment 0                 ││
+│                      │  │ • [Segment 1 - highlighted] ││
+│                      │  └─────────────────────────────┘│
+└──────────────────────┴─────────────────────────────────┘
+```
+
+**Files modified:** `spawn.ts` (changed `-v` to `-h` split)
+
+---
+
+### Human-Readable Slide Numbers ✅
+
+Added `slideNumber` (1-indexed) alongside `slideIndex` (0-indexed) in state file:
+
+```json
+{
+  "slideIndex": 0,
+  "slideNumber": 1,
+  ...
+}
+```
+
+This prevents Tutor from confusing "Slide 1" with index 1 (which is actually Slide 2).
+
+**Files modified:** `types.ts`, `presentation-state.ts`, `vta.tsx`
+
+---
+
+### Real-Time Event Notifications ✅
+
+Watcher now sends events to Claude via tmux when user interacts with VTA:
+
+| Event | Trigger |
+|-------|---------|
+| `PRESENTATION:SLIDE_CHANGED to N` | User navigates to slide N |
+| `PRESENTATION:MODE_CHANGED to guided` | User presses 'g' |
+| `PRESENTATION:MODE_CHANGED to browse` | User uses arrow keys |
+| `PRESENTATION:EXPLAIN_REQUESTED for slide N` | User presses 'e' |
+
+This enables Claude to react immediately when the user navigates or requests help.
+
+**Files modified:** `watcher.ts`, `spawn.ts` (CLAUDE.md generation)
+
+---
+
+### Deeper Explanation Mode ('e' key) ✅
+
+Pressing 'e' sends `PRESENTATION:EXPLAIN_REQUESTED` event, signaling Claude to provide a more detailed, in-depth explanation of the current slide (vs 'g' which just enters guided mode for normal narration).
+
+**Files modified:** `vta.tsx`, `watcher.ts`, `types.ts`
+
+---
+
+### Unique Command IDs ✅
+
+Fixed issue where navigation commands were ignored after the first one. Tutor commands now use `$RANDOM-$(date +%s)` for unique IDs.
+
+**Files modified:** `spawn.ts` (CLAUDE.md heredoc escaping)
+
+---
+
 ## Not Implemented
 
 | Feature | Reason |
@@ -214,3 +312,31 @@ bun run src/cli.ts present --file output.yaml
 # Interactive mode with Tutor narration
 bun run src/cli.ts present --file output.yaml --interactive
 ```
+
+---
+
+## Developer Testing Guide
+
+See `docs/INTERACTIVE-PRESENTATIONS-TESTING.md` for complete testing documentation.
+Test scripts are in `packages/canvas-plugin/testing/presentations/`.
+
+**Quick start:**
+```bash
+cd packages/canvas-plugin
+
+# Run all automated tests
+./testing/presentations/run-all-tests.sh
+
+# Or run individual tests
+./testing/presentations/test-generator.sh   # Test markdown → YAML
+./testing/presentations/test-watcher.sh     # Test event detection
+./testing/presentations/test-state-format.sh # Validate state JSON
+
+# Manual VTA testing (no Tutor)
+bun run src/cli.ts present --file testing/presentations/sample-presentation.yaml
+
+# Full interactive testing
+bun run src/cli.ts present --file testing/presentations/sample-presentation.yaml --interactive
+```
+
+**Key insight:** Test components in isolation before full integration. Most bugs can be caught without launching tmux.

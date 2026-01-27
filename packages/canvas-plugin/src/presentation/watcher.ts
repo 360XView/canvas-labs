@@ -52,7 +52,7 @@ async function main() {
     }
   }
 
-  // Check if state changed meaningfully (mode or slide)
+  // Check if state changed meaningfully (mode, slide, or explain request)
   function checkStateChange(): void {
     if (!existsSync(statePath)) return;
 
@@ -66,8 +66,11 @@ async function main() {
       lastStateContent = newContent;
       lastStateSize = statSync(statePath).size;
 
-      // Check what changed
-      if (oldState.slideNumber !== newState.slideNumber) {
+      // Check what changed - explain request takes priority
+      if (newState.explainRequestedAt && newState.explainRequestedAt !== oldState.explainRequestedAt) {
+        // User pressed 'e' for deeper explanation
+        sendToClaudeCode(`PRESENTATION:EXPLAIN_REQUESTED for slide ${newState.slideNumber}`);
+      } else if (oldState.slideNumber !== newState.slideNumber) {
         sendToClaudeCode(`PRESENTATION:SLIDE_CHANGED to ${newState.slideNumber}`);
       } else if (oldState.mode !== newState.mode) {
         sendToClaudeCode(`PRESENTATION:MODE_CHANGED to ${newState.mode}`);

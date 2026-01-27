@@ -33,6 +33,7 @@ export interface PresentationState {
   mode: PresentationMode;
   highlightedSegment: number | null;
   slidesViewed: string[];
+  explainRequestedAt?: string; // ISO timestamp when user pressed 'e' for deeper explanation
   lastUpdated: string;
 }
 

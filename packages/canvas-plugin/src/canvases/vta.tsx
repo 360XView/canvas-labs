@@ -53,7 +53,7 @@ function getContainerId(logDir: string): string | undefined {
 // Write presentation state update for tutor to read
 function writePresentationStateUpdate(
   logDir: string,
-  update: { mode?: PresentationMode; slideIndex?: number; highlight?: number | null }
+  update: { mode?: PresentationMode; slideIndex?: number; highlight?: number | null; explainRequested?: boolean }
 ) {
   const statePath = `${logDir}/presentation-state.json`;
 
@@ -72,6 +72,10 @@ function writePresentationStateUpdate(
     }
     if (update.highlight !== undefined) {
       state.highlightedSegment = update.highlight;
+    }
+    if (update.explainRequested) {
+      // Use timestamp so watcher can detect new requests
+      state.explainRequestedAt = new Date().toISOString();
     }
     state.lastUpdated = new Date().toISOString();
 
@@ -377,13 +381,13 @@ export function VTACanvas({
 
     // Interactive presentation mode controls
     if (isInteractivePresentation) {
-      // 'e' - Enter guided mode (explain current slide)
+      // 'e' - Request explanation of current slide
       if (input === "e" || input === "E") {
         setPresentationMode("guided");
         setHighlightedSegment(null);
-        // Write mode change to state file
+        // Write explain request to state file
         if (effectiveLogDir) {
-          writePresentationStateUpdate(effectiveLogDir, { mode: "guided" });
+          writePresentationStateUpdate(effectiveLogDir, { mode: "guided", explainRequested: true });
         }
         return;
       }
