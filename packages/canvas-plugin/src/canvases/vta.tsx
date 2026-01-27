@@ -22,9 +22,18 @@ import type { NarrationSegment, PresentationMode } from "../presentation/types";
 
 // Derive log directory from socket path
 // Socket: /tmp/lab-{moduleId}-{timestamp}.sock -> Log dir: /tmp/lab-logs-{moduleId}-{timestamp}/
+// Socket: /tmp/presentation-{presId}-{timestamp}.sock -> Log dir: /tmp/presentation-logs-{presId}-{timestamp}/
 function deriveLogDir(socketPath: string): string {
-  const filename = basename(socketPath, ".sock"); // e.g., "lab-shell-file-operations-1234567890"
-  const id = filename.replace(/^lab-/, ""); // e.g., "shell-file-operations-1234567890"
+  const filename = basename(socketPath, ".sock");
+
+  // Handle presentation sockets
+  if (filename.startsWith("presentation-")) {
+    const id = filename.replace(/^presentation-/, "");
+    return `/tmp/presentation-logs-${id}`;
+  }
+
+  // Handle lab sockets
+  const id = filename.replace(/^lab-/, "");
   return `/tmp/lab-logs-${id}`;
 }
 
@@ -43,10 +52,9 @@ function getContainerId(logDir: string): string | undefined {
 
 // Write presentation state update for tutor to read
 function writePresentationStateUpdate(
-  socketPath: string,
+  logDir: string,
   update: { mode?: PresentationMode; slideIndex?: number; highlight?: number | null }
 ) {
-  const logDir = deriveLogDir(socketPath);
   const statePath = `${logDir}/presentation-state.json`;
 
   try {
@@ -77,6 +85,7 @@ interface VTACanvasProps {
   config?: VTAConfig;
   socketPath?: string;
   scenario?: string;
+  logDir?: string; // Explicit log directory (for presentations)
 }
 
 export type { VTAConfig, VTAResult };
@@ -87,6 +96,7 @@ export function VTACanvas({
   config,
   socketPath,
   scenario = "learn",
+  logDir: explicitLogDir,
 }: VTACanvasProps) {
   const { exit } = useApp();
   const { stdout } = useStdout();
@@ -126,6 +136,9 @@ export function VTACanvas({
   const [presentationMode, setPresentationMode] = useState<PresentationMode>("guided");
   const [highlightedSegment, setHighlightedSegment] = useState<number | null>(null);
   const isInteractivePresentation = scenario === "interactive-presentation";
+
+  // Get effective log directory (explicit prop or derived from socket)
+  const effectiveLogDir = explicitLogDir || (socketPath ? deriveLogDir(socketPath) : undefined);
 
   // Current step
   const currentStep = module.steps[currentStepIndex];
@@ -335,9 +348,9 @@ export function VTACanvas({
       if (input === "e" || input === "E") {
         setPresentationMode("guided");
         setHighlightedSegment(null);
-        // Write mode change to state file if socketPath exists
-        if (socketPath) {
-          writePresentationStateUpdate(socketPath, { mode: "guided" });
+        // Write mode change to state file
+        if (effectiveLogDir) {
+          writePresentationStateUpdate(effectiveLogDir, { mode: "guided" });
         }
         return;
       }
@@ -346,8 +359,8 @@ export function VTACanvas({
       if (input === "g" || input === "G") {
         setPresentationMode("guided");
         setHighlightedSegment(null);
-        if (socketPath) {
-          writePresentationStateUpdate(socketPath, { mode: "guided" });
+        if (effectiveLogDir) {
+          writePresentationStateUpdate(effectiveLogDir, { mode: "guided" });
         }
         return;
       }
@@ -357,8 +370,8 @@ export function VTACanvas({
         if (presentationMode === "guided") {
           setPresentationMode("browse");
           setHighlightedSegment(null);
-          if (socketPath) {
-            writePresentationStateUpdate(socketPath, { mode: "browse" });
+          if (effectiveLogDir) {
+            writePresentationStateUpdate(effectiveLogDir, { mode: "browse" });
           }
         }
       }
@@ -375,8 +388,8 @@ export function VTACanvas({
       if (currentStepIndex > 0) {
         setCurrentStepIndex((prev) => prev - 1);
         // Update state file for interactive presentations
-        if (isInteractivePresentation && socketPath) {
-          writePresentationStateUpdate(socketPath, { slideIndex: currentStepIndex - 1 });
+        if (isInteractivePresentation && effectiveLogDir) {
+          writePresentationStateUpdate(effectiveLogDir, { slideIndex: currentStepIndex - 1 });
         }
       }
       return;
@@ -462,7 +475,12 @@ export function VTACanvas({
             ),
           }));
         }
-        setCurrentStepIndex((prev) => prev + 1);
+        const newIndex = currentStepIndex + 1;
+        setCurrentStepIndex(newIndex);
+        // Update state file for interactive presentations
+        if (isInteractivePresentation && effectiveLogDir) {
+          writePresentationStateUpdate(effectiveLogDir, { slideIndex: newIndex });
+        }
       }
       return;
     }

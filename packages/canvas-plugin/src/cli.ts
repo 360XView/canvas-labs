@@ -28,18 +28,20 @@ program
   .option("--config <json>", "Canvas configuration (JSON)")
   .option("--socket <path>", "Unix socket path for IPC")
   .option("--scenario <name>", "Scenario name (e.g., display, meeting-picker)")
+  .option("--log-dir <path>", "Log directory path (for presentations)")
   .action(async (kind = "demo", options) => {
     const id = options.id || `${kind}-1`;
     const config = options.config ? JSON.parse(options.config) : undefined;
     const socketPath = options.socket;
     const scenario = options.scenario || "display";
+    const logDir = options.logDir;
 
     // Set window title
     setWindowTitle(`canvas: ${kind}`);
 
     // Dynamically import and render the canvas
     const { renderCanvas } = await import("./canvases");
-    await renderCanvas(kind, id, config, { socketPath, scenario });
+    await renderCanvas(kind, id, config, { socketPath, scenario, logDir });
   });
 
 program

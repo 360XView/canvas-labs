@@ -22,6 +22,7 @@ function showCursor() {
 export interface RenderOptions {
   socketPath?: string;
   scenario?: string;
+  logDir?: string;
 }
 
 export async function renderCanvas(
@@ -151,6 +152,7 @@ async function renderVTA(
       config={config}
       socketPath={options?.socketPath}
       scenario={options?.scenario || "learn"}
+      logDir={options?.logDir}
     />,
     {
       exitOnCtrlC: true,

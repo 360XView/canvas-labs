@@ -3,11 +3,11 @@
 // Pattern follows lab/spawn.ts
 
 import { spawnSync, spawn } from "child_process";
-import { mkdirSync, writeFileSync, existsSync } from "fs";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
 import { dirname, resolve, join, basename } from "path";
-import { loadPresentationFromFile, loadPresentation, isInteractivePresentation, isInteractivePresentationById } from "./loader";
+import { loadPresentationFromFile, loadPresentation } from "./loader";
 import { createPresentationStateWriter } from "../lab/tutor-control/presentation-state";
-import type { InteractivePresentation, InteractiveSlide, NarrationSegment } from "./types";
+import type { InteractivePresentation } from "./types";
 import type { Module } from "../canvases/vta/types";
 
 export interface InteractivePresentationSpawnOptions {
@@ -55,21 +55,25 @@ export async function spawnInteractivePresentation(
   }
 
   const basePath = getBasePath();
-  const logDir = `/tmp/presentation-logs-${presId}-${Date.now()}`;
-  const socketPath = `/tmp/presentation-${presId}-${Date.now()}.sock`;
+  const timestamp = Date.now();
+  const logDir = `/tmp/presentation-logs-${presId}-${timestamp}`;
+  const socketPath = `/tmp/presentation-${presId}-${timestamp}.sock`;
 
-  // Create log directory and files
+  // Create log directory
   mkdirSync(logDir, { recursive: true });
   writeFileSync(`${logDir}/tutor-commands.json`, JSON.stringify({ commands: [] }, null, 2));
 
-  // Initialize presentation state
+  // Write VTA config to a file (avoids JSON escaping issues in shell)
+  const configPath = `${logDir}/vta-config.json`;
+  writeFileSync(configPath, JSON.stringify({ module }, null, 2));
+
+  // Initialize presentation state with full slide info for Tutor
   const stateWriter = createPresentationStateWriter({
     logDir,
     onLog: (msg) => console.log(`[state] ${msg}`),
     onError: (err) => console.error(`[state] ${err.message}`),
   });
 
-  // Convert module to interactive presentation format for state
   const interactivePresentation: InteractivePresentation = {
     title: module.title,
     description: module.description,
@@ -86,15 +90,11 @@ export async function spawnInteractivePresentation(
 
   stateWriter.initialize(interactivePresentation, socketPath);
 
-  // Check if we're in tmux
-  const inTmux = !!process.env.TMUX;
-
-  // VTA command with interactive-presentation scenario
-  const vtaConfig = JSON.stringify({ module });
-  const vtaCmd = `cd ${basePath} && bun run src/cli.ts show vta --config '${vtaConfig}' --socket ${socketPath} --scenario interactive-presentation`;
+  // Also write full presentation info for Tutor reference
+  writeFileSync(`${logDir}/presentation-full.json`, JSON.stringify(interactivePresentation, null, 2));
 
   // Tutor workspace setup
-  const tutorWorkspace = `/tmp/presentation-tutor-${presId}-${Date.now()}`;
+  const tutorWorkspace = `/tmp/presentation-tutor-${presId}-${timestamp}`;
   mkdirSync(tutorWorkspace, { recursive: true });
 
   // Create .claude directory for settings
@@ -107,45 +107,49 @@ export async function spawnInteractivePresentation(
     model: "haiku",
     permissions: {
       allow: [
-        "Read(//tmp/**)",
-        "Write(//tmp/**)",
-        "Glob(//tmp/**)",
-        "Bash(ls:*)",
+        "Read(/tmp/**)",
+        "Write(/tmp/**)",
         "Bash(cat:*)",
+        "Bash(echo:*)",
       ],
     },
   };
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
 
-  // Generate tutor CLAUDE.md
+  // Generate tutor CLAUDE.md with full presentation content
   const tutorPrompt = generatePresentingTutorPrompt({
-    presentationTitle: module.title,
+    presentation: interactivePresentation,
     logDir,
-    slideCount: module.steps.length,
   });
   writeFileSync(join(tutorWorkspace, "CLAUDE.md"), tutorPrompt);
 
-  // Layout:
-  // ┌─────────────────────────────────────────┐
-  // │  VTA Canvas (60% height)                │
-  // ├─────────────────────────────────────────┤
-  // │  Claude Code (Tutor)  (40% height)      │
-  // └─────────────────────────────────────────┘
+  // Check if we're in tmux
+  const inTmux = !!process.env.TMUX;
 
-  const vtaHeightPct = 100 - tutorHeight;
+  // VTA command - read config from file to avoid escaping issues
+  const vtaCmd = `bun run src/cli.ts show vta --config "$(cat ${configPath})" --socket ${socketPath} --scenario interactive-presentation --log-dir ${logDir}`;
 
   if (!inTmux) {
-    // Create new tmux session with VTA
+    // Create new tmux session with bash first
     spawnSync("tmux", [
       "new-session",
       "-d",
       "-s", sessionName,
-      "-x", "200",
+      "-x", "140",
       "-y", "50",
-      vtaCmd,
     ]);
 
-    await sleep(200);
+    await sleep(100);
+
+    // Send VTA command to the session
+    spawnSync("tmux", [
+      "send-keys",
+      "-t", sessionName,
+      `cd ${basePath} && ${vtaCmd}`,
+      "Enter",
+    ]);
+
+    await sleep(500);
 
     // Split vertically for Claude Code tutor
     spawnSync("tmux", [
@@ -160,19 +164,30 @@ export async function spawnInteractivePresentation(
     // Select the VTA pane (top)
     spawnSync("tmux", ["select-pane", "-t", `${sessionName}:0.0`]);
 
+    // Start watcher before attaching
+    startWatcher(basePath, logDir, socketPath);
+
     // Attach to session
     spawnSync("tmux", ["attach-session", "-t", sessionName], {
       stdio: "inherit",
     });
   } else {
-    // Already in tmux - create new window
+    // Already in tmux - create new window with bash
     spawnSync("tmux", [
       "new-window",
       "-n", `pres-${presId}`,
-      vtaCmd,
     ]);
 
-    await sleep(200);
+    await sleep(100);
+
+    // Send VTA command
+    spawnSync("tmux", [
+      "send-keys",
+      `cd ${basePath} && ${vtaCmd}`,
+      "Enter",
+    ]);
+
+    await sleep(500);
 
     // Split for tutor
     spawnSync("tmux", [
@@ -185,9 +200,19 @@ export async function spawnInteractivePresentation(
 
     // Select VTA pane (top)
     spawnSync("tmux", ["select-pane", "-U"]);
+
+    // Start watcher
+    startWatcher(basePath, logDir, socketPath);
   }
 
-  // Start presentation watcher (monitors tutor commands and sends to VTA via IPC)
+  return {
+    sessionName,
+    logDir,
+    socketPath,
+  };
+}
+
+function startWatcher(basePath: string, logDir: string, socketPath: string): void {
   const watcherProcess = spawn(
     "bun",
     ["run", `${basePath}/src/presentation/watcher.ts`, logDir, socketPath],
@@ -200,12 +225,6 @@ export async function spawnInteractivePresentation(
     writeFileSync(join(logDir, "watcher.pid"), String(watcherProcess.pid));
   }
   watcherProcess.unref();
-
-  return {
-    sessionName,
-    logDir,
-    socketPath,
-  };
 }
 
 function sleep(ms: number): Promise<void> {
@@ -213,82 +232,79 @@ function sleep(ms: number): Promise<void> {
 }
 
 interface PresentingTutorPromptOptions {
-  presentationTitle: string;
+  presentation: InteractivePresentation;
   logDir: string;
-  slideCount: number;
 }
 
 function generatePresentingTutorPrompt(options: PresentingTutorPromptOptions): string {
-  const { presentationTitle, logDir, slideCount } = options;
+  const { presentation, logDir } = options;
+
+  // Build slide reference for the Tutor
+  const slideReference = presentation.slides.map((slide, idx) => {
+    const segments = slide.narration.segments
+      .map((seg, segIdx) => `    ${segIdx}: "${seg.text}"`)
+      .join("\n");
+    return `### Slide ${idx + 1}: ${slide.title}
+Segments:
+${segments || "    (no segments)"}`;
+  }).join("\n\n");
 
   return `# Presentation Mode
 
-You are presenting "${presentationTitle}" to the user.
+You are presenting "${presentation.title}" to the user.
 
-## State File
+## IMPORTANT: Always Check Current State First!
 
-Watch this file for current presentation state:
-\`${logDir}/presentation-state.json\`
+Before responding, read the current state:
+\`\`\`bash
+cat ${logDir}/presentation-state.json
+\`\`\`
 
-The state includes:
-- \`currentSlide\`: The slide being displayed
-- \`slideIndex\`: Current slide number (0-indexed)
-- \`totalSlides\`: Total number of slides (${slideCount})
-- \`mode\`: Either "guided" or "browse"
-- \`highlightedSegment\`: Currently highlighted segment index (null if none)
-- \`slidesViewed\`: Array of slide IDs the user has seen
+This shows you:
+- \`slideIndex\`: Which slide the user is viewing (0-indexed)
+- \`currentSlide\`: The current slide content and segments
+- \`mode\`: "guided" or "browse"
+- \`highlightedSegment\`: Currently highlighted segment (or null)
 
-## Modes
+## Slide Reference
 
-### GUIDED mode (user pressed 'e' or 'g')
+${slideReference}
 
-When in guided mode:
-1. Read the current slide from the state file
-2. Narrate the content conversationally - don't just read it verbatim
-3. To highlight a segment, write a command to tutor-commands.json:
-   \`\`\`json
-   {
-     "commands": [
-       {
-         "id": "cmd-1",
-         "timestamp": "2024-01-15T10:30:00Z",
-         "type": "highlight",
-         "payload": { "segmentIndex": 0 }
-       }
-     ]
-   }
-   \`\`\`
-4. After explaining a slide, invite questions: "Any questions about this?"
-5. When the user says "continue", "next", or similar, advance to next segment or slide
+## How to Highlight a Segment
 
-### BROWSE mode (user navigated with arrows)
+Write a command to highlight segment N on the current slide:
+\`\`\`bash
+cat > ${logDir}/tutor-commands.json << 'EOF'
+{
+  "commands": [
+    {
+      "id": "cmd-$(date +%s)",
+      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "type": "highlight",
+      "payload": { "segmentIndex": 0 }
+    }
+  ]
+}
+EOF
+\`\`\`
 
-When in browse mode:
-- The user is navigating freely - stay quiet unless asked
+Change \`segmentIndex\` to highlight different segments (0, 1, 2, etc.)
+
+## Your Role
+
+**In GUIDED mode** (mode="guided"):
+1. Read the state file to see which slide they're on
+2. Narrate the slide content conversationally
+3. Highlight each segment as you discuss it
+4. Ask if they have questions before moving on
+
+**In BROWSE mode** (mode="browse"):
+- User is navigating freely - be quiet unless asked
 - Answer questions about the current slide if asked
-- When user presses 'e' or 'g', switch back to guided narration
 
-## Commands
+## Getting Started
 
-Write commands to \`${logDir}/tutor-commands.json\`:
-
-**Highlight a segment:**
-\`\`\`json
-{ "type": "highlight", "payload": { "segmentIndex": N } }
-\`\`\`
-
-**Clear highlight:**
-\`\`\`json
-{ "type": "clearHighlight" }
-\`\`\`
-
-## Tips
-
-- Be conversational, not robotic
-- Add context beyond what's on the slide
-- Pause after each major point for questions
-- If the user seems confused, offer to explain differently
-- Keep explanations concise - this is a presentation, not a lecture
+When the user starts, read the state file and begin narrating the first slide!
 `;
 }
 
