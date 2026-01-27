@@ -68,6 +68,7 @@ function writePresentationStateUpdate(
     }
     if (update.slideIndex !== undefined) {
       state.slideIndex = update.slideIndex;
+      state.slideNumber = update.slideIndex + 1; // Human-readable (1-indexed)
     }
     if (update.highlight !== undefined) {
       state.highlightedSegment = update.highlight;

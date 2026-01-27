@@ -72,6 +72,7 @@ export function createPresentationStateWriter(
         socketPath,
         currentSlide: firstSlide,
         slideIndex: 0,
+        slideNumber: 1, // Human-readable (1-indexed)
         totalSlides: pres.slides.length,
         mode: "guided",
         highlightedSegment: null,
@@ -97,6 +98,7 @@ export function createPresentationStateWriter(
 
       const slide = presentation.slides[slideIndex];
       state.slideIndex = slideIndex;
+      state.slideNumber = slideIndex + 1; // Human-readable (1-indexed)
       state.currentSlide = slide;
       state.highlightedSegment = null; // Clear highlight on slide change
 

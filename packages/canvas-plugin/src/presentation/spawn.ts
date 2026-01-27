@@ -282,10 +282,12 @@ cat ${logDir}/presentation-state.json
 \`\`\`
 
 This shows you:
-- \`slideIndex\`: Which slide the user is viewing (0-indexed)
-- \`currentSlide\`: The current slide content and segments
+- \`slideNumber\`: Which slide the user is viewing (1, 2, 3, etc.)
+- \`currentSlide.title\`: The title of the current slide
 - \`mode\`: "guided" or "browse"
 - \`highlightedSegment\`: Currently highlighted segment (or null)
+
+**IMPORTANT: Always check slideNumber to know which slide the user sees!**
 
 ## Slide Reference
 

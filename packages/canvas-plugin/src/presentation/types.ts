@@ -28,6 +28,7 @@ export interface PresentationState {
   socketPath: string;
   currentSlide: InteractiveSlide;
   slideIndex: number;
+  slideNumber: number; // Human-readable (1-indexed)
   totalSlides: number;
   mode: PresentationMode;
   highlightedSegment: number | null;
