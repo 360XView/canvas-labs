@@ -1,107 +1,110 @@
-# Canvas Labs - Development Guide
+# CLAUDE.md
 
-Interactive terminal-based learning labs with automatic task detection.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Structure
-
-```
-canvas-labs/
-├── packages/
-│   ├── canvas-plugin/     # Main Claude Code plugin (VTA, labs, skills)
-│   ├── tui-testing/       # TUI testing framework
-│   └── vscode-extension/  # VSCode integration
-├── docs/
-│   ├── designs/           # Architecture decisions
-│   ├── plans/             # Implementation plans
-│   └── archive/           # Historical documentation
-└── scripts/               # Build and validation scripts
-```
-
-## Quick Start
+## Build & Test Commands
 
 ```bash
-# Install all dependencies
+# Install dependencies (monorepo)
 bun install
 
-# Run a lab
-cd packages/canvas-plugin
-bun run src/cli.ts lab linux-user-management
+# Run a specific lab
+cd packages/canvas-plugin && bun run src/cli.ts lab linux-user-management
 
-# Run tests
-bun test:plugin    # Unit tests (137 tests)
-bun test:tui       # TUI integration tests
+# Unit tests
+bun test:plugin                              # All plugin tests
+cd packages/canvas-plugin && bun test src/lab/  # Lab subsystem only
+cd packages/canvas-plugin && bun test src/lab/__tests__/validation.test.ts  # Single test file
+
+# TUI integration tests
+bun test:tui
+
+# Lab validation
+cd packages/canvas-plugin && bun run src/cli.ts lab-test <lab-id>
+cd packages/canvas-plugin && bun run src/cli.ts lab-validate <lab-id>
+
+# Rebuild Docker image (required after changing lab content)
+cd packages/canvas-plugin/docker/lab-environment && ./build.sh
 ```
 
-## Packages
+## Architecture Overview
 
-### canvas-plugin
+Canvas Labs is a monorepo educational platform with React/Ink terminal UIs, Docker-isolated student environments, and AI tutor integration.
 
-The main Claude Code plugin containing:
-- **src/**: Source code (CLI, canvases, lab system, telemetry)
-- **labs/**: Lab content (shell mastery course, linux user management)
-- **skills/**: Plugin skills (vta, canvas, calendar, document, flight, lab-launcher)
-- **docker/**: Lab environment container
+### Runtime Flow
 
-### tui-testing
-
-Framework for testing terminal UI applications:
-- **src/**: Core framework (tmux controller, test runner, state observer)
-- **adapters/**: Application-specific adapters (canvas adapter)
-- **examples/**: Test examples (canvas-vta-test.ts)
-
-### vscode-extension
-
-VSCode integration for Canvas labs (experimental).
-
-## Testing
-
-### Unit Tests
-```bash
-cd packages/canvas-plugin
-bun test src/lab/
+```
+CLI (cli.ts)
+  → spawn.ts creates tmux session with 3 panes:
+      ├─ Claude Code (Tutor AI)
+      ├─ VTA Canvas (React/Ink step guide)
+      └─ Docker Container (student shell)
+  → monitor.ts watches log files in /tmp/lab-logs-{id}/
+  → Lab adapters parse events (commands, check results)
+  → IPC (Unix sockets) sends taskCompleted to VTA
+  → tutor-watcher.ts notifies Claude Code of state changes
 ```
 
-### TUI Integration Tests
-```bash
-bun run packages/tui-testing/examples/canvas-vta-test.ts
+### Key Subsystems
+
+| Subsystem | Entry Point | Purpose |
+|-----------|-------------|---------|
+| **Lab System** | `src/lab/spawn.ts` | Orchestrates Docker + tmux + monitoring |
+| **Canvas System** | `src/canvases/` | React/Ink terminal UIs (VTA, calendar, document) |
+| **IPC** | `src/ipc/` | Unix socket protocol between canvases and controllers |
+| **Adapters** | `src/lab/adapters/` | Lab-type specific event parsing (linux-cli, python, splunk) |
+| **Tutor** | `src/tutor/` | Role-based prompts, profiles, progress tracking |
+| **Telemetry** | `src/lab/telemetry/` | Event logging, scoring presets |
+
+### IPC Protocol
+
+Canvases communicate via Unix sockets (`/tmp/canvas-{id}.sock`) using NDJSON:
+
+```typescript
+// Canvas → Controller
+{ type: "ready" } | { type: "selected", data } | { type: "cancelled" }
+
+// Controller → Canvas
+{ type: "update", config } | { type: "close" }
+
+// Lab-specific
+{ type: "taskCompleted", stepId, taskId, source: "command" | "check" }
 ```
 
-## Skills
+### Lab Module Structure
 
-Plugin skills are in `packages/canvas-plugin/skills/`:
-- `/canvas` - Main terminal TUI skill
-- `/vta` - Virtual Teaching Assistant for labs
-- `/calendar` - Calendar canvas demo
-- `/document` - Document canvas demo
-- `/flight` - Flight booking canvas demo
-- `/lab-launcher` - Lab launcher interface
+```
+labs/{lab-id}/
+├── module.yaml      # Step definitions, validation rules
+├── setup.sh         # Runs as root in container
+└── checks/          # Validation scripts (exit 0 = pass)
+```
 
-Developer workflow skills are in `.claude/skills/`:
-- `/validate-migration` - Run validation tests
-- `/clean-repo` - Remove stale files
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `packages/canvas-plugin/src/cli.ts` | CLI entry point |
-| `packages/canvas-plugin/src/lab/spawn.ts` | Lab orchestration |
-| `packages/canvas-plugin/src/canvases/vta/vta.tsx` | VTA canvas component |
-| `packages/canvas-plugin/docker/lab-environment/` | Docker setup |
-
-## Architecture
-
-See `docs/plans/2026-01-24-multi-lab-telemetry-architecture.md` for the multi-lab architecture design.
+Check scripts map to steps via the `validation.script` field in module.yaml.
 
 ## Adding New Labs
 
-1. Create lab directory in `packages/canvas-plugin/labs/{lab-id}/`
-2. Add `module.yaml` with step definitions
-3. Add `setup.sh` for environment setup
-4. Add check scripts in `checks/`
-5. Test with `bun run src/cli.ts lab {lab-id}`
+1. Create from template: `cd packages/canvas-plugin && bun run src/cli.ts lab-edit my-lab --new`
+2. Edit `labs/.drafts/my-lab/module.yaml` (steps, hints, solutions)
+3. Add check scripts in `checks/` (exit 0 = pass, stdout = message)
+4. Test: `bun run src/cli.ts lab-test my-lab`
+5. Publish: `mv labs/.drafts/my-lab labs/my-lab`
 
-## Repository
+### Step Types
 
-- GitHub: https://github.com/360XView/canvas-labs
-- Issues: https://github.com/360XView/canvas-labs/issues
+| Type | Purpose | Validation |
+|------|---------|------------|
+| `introduction` | Welcome/onboarding | None |
+| `task` | Hands-on exercise | check-script, command-pattern, user-check, pytest |
+| `question` | Knowledge check | Auto-graded |
+| `summary` | Completion | None |
+
+## Known Issues
+
+Race condition: check results written before adapter starts watching may be missed. Checks poll every 2s, so subsequent passes are caught.
+
+## Detailed Documentation
+
+- **Lab development**: See `packages/canvas-plugin/CLAUDE.md` for full module.yaml schema, check script format, and Docker details
+- **Architecture**: See `docs/plans/2026-01-26-canvas-labs-architecture-analysis.md`
+- **Multi-lab telemetry**: See `docs/plans/2026-01-24-multi-lab-telemetry-architecture.md`
