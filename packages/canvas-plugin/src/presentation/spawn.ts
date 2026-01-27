@@ -178,7 +178,7 @@ export async function spawnInteractivePresentation(
     spawnSync("tmux", ["select-pane", "-t", `${sessionName}:0.1`]);
 
     // Start watcher before attaching
-    startWatcher(basePath, logDir, socketPath);
+    startWatcher(basePath, logDir, socketPath, `${sessionName}:0.0`);
 
     // Attach to session
     spawnSync("tmux", ["attach-session", "-t", sessionName], {
@@ -223,7 +223,7 @@ export async function spawnInteractivePresentation(
     // VTA pane is already selected (it's the new split)
 
     // Start watcher
-    startWatcher(basePath, logDir, socketPath);
+    startWatcher(basePath, logDir, socketPath, `${sessionName}:0.0`);
   }
 
   return {
@@ -233,10 +233,10 @@ export async function spawnInteractivePresentation(
   };
 }
 
-function startWatcher(basePath: string, logDir: string, socketPath: string): void {
+function startWatcher(basePath: string, logDir: string, socketPath: string, tmuxTarget: string): void {
   const watcherProcess = spawn(
     "bun",
-    ["run", `${basePath}/src/presentation/watcher.ts`, logDir, socketPath],
+    ["run", `${basePath}/src/presentation/watcher.ts`, logDir, socketPath, tmuxTarget],
     {
       detached: true,
       stdio: "ignore",
@@ -372,6 +372,19 @@ EOF
 **In BROWSE mode** (mode="browse"):
 - User is navigating freely - be quiet unless asked
 - Answer questions about the current slide if asked
+
+## Events You Will Receive
+
+The system will send you events when the user interacts with the presentation:
+
+- \`PRESENTATION:SLIDE_CHANGED to N\` - User navigated to slide N
+- \`PRESENTATION:MODE_CHANGED to guided\` - User pressed 'g' to enter guided mode
+- \`PRESENTATION:MODE_CHANGED to browse\` - User started navigating (browse mode)
+
+**When you receive an event**, read the state file and respond appropriately:
+- On SLIDE_CHANGED: describe the new slide
+- On MODE_CHANGED to guided: start narrating the current slide
+- On MODE_CHANGED to browse: acknowledge and wait for questions
 
 ## Getting Started
 
