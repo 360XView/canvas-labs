@@ -295,12 +295,12 @@ ${slideReference}
 
 Write a command to highlight segment N on the current slide:
 \`\`\`bash
-cat > ${logDir}/tutor-commands.json << 'EOF'
+cat > ${logDir}/tutor-commands.json << EOF
 {
   "commands": [
     {
-      "id": "cmd-$(date +%s)",
-      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "id": "cmd-\$RANDOM-\$(date +%s)",
+      "timestamp": "\$(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "type": "highlight",
       "payload": { "segmentIndex": 0 }
     }
@@ -315,12 +315,12 @@ Change \`segmentIndex\` to highlight different segments (0, 1, 2, etc.)
 
 **Next slide:**
 \`\`\`bash
-cat > ${logDir}/tutor-commands.json << 'EOF'
+cat > ${logDir}/tutor-commands.json << EOF
 {
   "commands": [
     {
-      "id": "nav-next-$(date +%s)",
-      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "id": "nav-next-\$RANDOM-\$(date +%s)",
+      "timestamp": "\$(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "type": "nextSlide"
     }
   ]
@@ -330,12 +330,12 @@ EOF
 
 **Previous slide:**
 \`\`\`bash
-cat > ${logDir}/tutor-commands.json << 'EOF'
+cat > ${logDir}/tutor-commands.json << EOF
 {
   "commands": [
     {
-      "id": "nav-prev-$(date +%s)",
-      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "id": "nav-prev-\$RANDOM-\$(date +%s)",
+      "timestamp": "\$(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "type": "previousSlide"
     }
   ]
@@ -345,12 +345,12 @@ EOF
 
 **Go to specific slide (0-indexed):**
 \`\`\`bash
-cat > ${logDir}/tutor-commands.json << 'EOF'
+cat > ${logDir}/tutor-commands.json << EOF
 {
   "commands": [
     {
-      "id": "nav-goto-$(date +%s)",
-      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "id": "nav-goto-\$RANDOM-\$(date +%s)",
+      "timestamp": "\$(date -u +%Y-%m-%dT%H:%M:%SZ)",
       "type": "navigateToSlide",
       "payload": { "slideIndex": 2 }
     }
