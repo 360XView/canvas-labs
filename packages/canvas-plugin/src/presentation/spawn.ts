@@ -129,40 +129,53 @@ export async function spawnInteractivePresentation(
   // VTA command - read config from file to avoid escaping issues
   const vtaCmd = `bun run src/cli.ts show vta --config "$(cat ${configPath})" --socket ${socketPath} --scenario interactive-presentation --log-dir ${logDir}`;
 
+  // Layout: Claude Code (left) | VTA (right)
+  const tutorWidth = 100 - tutorHeight; // Convert height % to width % for right pane
+
   if (!inTmux) {
-    // Create new tmux session with bash first
+    // Create new tmux session with Claude Code (tutor) first
     spawnSync("tmux", [
       "new-session",
       "-d",
       "-s", sessionName,
-      "-x", "140",
+      "-x", "180",
       "-y", "50",
+      "-c", tutorWorkspace,
     ]);
 
     await sleep(100);
 
-    // Send VTA command to the session
+    // Start Claude Code in the left pane
     spawnSync("tmux", [
       "send-keys",
       "-t", sessionName,
-      `cd ${basePath} && ${vtaCmd}`,
+      "claude",
       "Enter",
     ]);
 
-    await sleep(500);
+    await sleep(300);
 
-    // Split vertically for Claude Code tutor
+    // Split horizontally for VTA on the right
     spawnSync("tmux", [
       "split-window",
       "-t", sessionName,
-      "-v",
-      "-p", String(tutorHeight),
-      "-c", tutorWorkspace,
-      "claude",
+      "-h",
+      "-p", String(tutorWidth),
+      "-c", basePath,
     ]);
 
-    // Select the VTA pane (top)
-    spawnSync("tmux", ["select-pane", "-t", `${sessionName}:0.0`]);
+    await sleep(100);
+
+    // Send VTA command to the right pane
+    spawnSync("tmux", [
+      "send-keys",
+      "-t", `${sessionName}:0.1`,
+      vtaCmd,
+      "Enter",
+    ]);
+
+    // Select the VTA pane (right)
+    spawnSync("tmux", ["select-pane", "-t", `${sessionName}:0.1`]);
 
     // Start watcher before attaching
     startWatcher(basePath, logDir, socketPath);
@@ -172,34 +185,42 @@ export async function spawnInteractivePresentation(
       stdio: "inherit",
     });
   } else {
-    // Already in tmux - create new window with bash
+    // Already in tmux - create new window with Claude Code
     spawnSync("tmux", [
       "new-window",
       "-n", `pres-${presId}`,
+      "-c", tutorWorkspace,
     ]);
 
     await sleep(100);
 
-    // Send VTA command
+    // Start Claude Code in the left pane
     spawnSync("tmux", [
       "send-keys",
-      `cd ${basePath} && ${vtaCmd}`,
+      "claude",
       "Enter",
     ]);
 
-    await sleep(500);
+    await sleep(300);
 
-    // Split for tutor
+    // Split horizontally for VTA on the right
     spawnSync("tmux", [
       "split-window",
-      "-v",
-      "-p", String(tutorHeight),
-      "-c", tutorWorkspace,
-      "claude",
+      "-h",
+      "-p", String(tutorWidth),
+      "-c", basePath,
     ]);
 
-    // Select VTA pane (top)
-    spawnSync("tmux", ["select-pane", "-U"]);
+    await sleep(100);
+
+    // Send VTA command to the right pane
+    spawnSync("tmux", [
+      "send-keys",
+      vtaCmd,
+      "Enter",
+    ]);
+
+    // VTA pane is already selected (it's the new split)
 
     // Start watcher
     startWatcher(basePath, logDir, socketPath);
