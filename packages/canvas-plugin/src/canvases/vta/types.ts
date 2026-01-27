@@ -1,6 +1,7 @@
 // Virtual Teaching Assistant Canvas Types
 
 import type { LabType } from "../../lab/telemetry/types";
+import type { NarrationSegment } from "../../presentation/types";
 
 export interface VTAConfig {
   module?: Module;           // Direct module object
@@ -31,6 +32,7 @@ export interface StepContent {
   solution?: Solution;
   question?: Question;
   tryIt?: string;  // "Try it" prompt for presentations
+  narrationSegments?: NarrationSegment[];  // For interactive presentations
 }
 
 export interface TaskItem {

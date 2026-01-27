@@ -54,7 +54,10 @@ export type LabMessage =
   | { type: "addDynamicStep"; step: DynamicStep; afterStepId?: string }
   | { type: "tutorCommandAck"; commandId: string; status: "done" | "error"; message?: string }
   | { type: "questionAnswered"; stepId: string; isCorrect: boolean; selectedOptions: string[]; correctOptions: string[]; attempts: number }
-  | { type: "ping" };
+  | { type: "ping" }
+  // Interactive presentation messages (Tutor → VTA)
+  | { type: "highlight"; segmentIndex: number }
+  | { type: "clearHighlight" };
 
 // Socket path convention
 export function getSocketPath(id: string): string {

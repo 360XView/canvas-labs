@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useApp, useInput, useStdout } from "ink";
 import { spawnSync } from "child_process";
 import { resolve, dirname, basename } from "path";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { Sidebar } from "./vta/components/sidebar";
 import { TaskPanel } from "./vta/components/task-panel";
 import { DebugPanel } from "./vta/components/debug-panel";
+import { PresentationContent } from "./vta/components/presentation-content";
 import {
   type VTAConfig,
   type VTAResult,
@@ -17,6 +18,7 @@ import { useLabFeedback } from "./vta/hooks/use-lab-feedback";
 import type { DynamicStep, LabMessage } from "../ipc/types";
 import { loadModule as loadModuleFromFile } from "../lab/module-loader";
 import { cleanupLabSession } from "../lab/cleanup";
+import type { NarrationSegment, PresentationMode } from "../presentation/types";
 
 // Derive log directory from socket path
 // Socket: /tmp/lab-{moduleId}-{timestamp}.sock -> Log dir: /tmp/lab-logs-{moduleId}-{timestamp}/
@@ -37,6 +39,37 @@ function getContainerId(logDir: string): string | undefined {
     }
   }
   return undefined;
+}
+
+// Write presentation state update for tutor to read
+function writePresentationStateUpdate(
+  socketPath: string,
+  update: { mode?: PresentationMode; slideIndex?: number; highlight?: number | null }
+) {
+  const logDir = deriveLogDir(socketPath);
+  const statePath = `${logDir}/presentation-state.json`;
+
+  try {
+    let state: Record<string, unknown> = {};
+    if (existsSync(statePath)) {
+      state = JSON.parse(readFileSync(statePath, "utf-8"));
+    }
+
+    if (update.mode !== undefined) {
+      state.mode = update.mode;
+    }
+    if (update.slideIndex !== undefined) {
+      state.slideIndex = update.slideIndex;
+    }
+    if (update.highlight !== undefined) {
+      state.highlightedSegment = update.highlight;
+    }
+    state.lastUpdated = new Date().toISOString();
+
+    writeFileSync(statePath, JSON.stringify(state, null, 2));
+  } catch {
+    // Silently fail - state file may not exist yet
+  }
 }
 
 interface VTACanvasProps {
@@ -88,6 +121,11 @@ export function VTACanvas({
   );
   const [scrollOffset, setScrollOffset] = useState(0);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Interactive presentation state
+  const [presentationMode, setPresentationMode] = useState<PresentationMode>("guided");
+  const [highlightedSegment, setHighlightedSegment] = useState<number | null>(null);
+  const isInteractivePresentation = scenario === "interactive-presentation";
 
   // Current step
   const currentStep = module.steps[currentStepIndex];
@@ -172,14 +210,26 @@ export function VTACanvas({
     []
   );
 
-  // Lab feedback hook - only active in lab mode
+  // Handle highlight message from tutor (interactive presentation)
+  const handleHighlight = useCallback((segmentIndex: number) => {
+    setHighlightedSegment(segmentIndex);
+  }, []);
+
+  const handleClearHighlight = useCallback(() => {
+    setHighlightedSegment(null);
+  }, []);
+
+  // Lab feedback hook - active in lab mode and interactive presentation mode
   const isLabMode = scenario === "lab" && !!socketPath;
+  const useIPC = (isLabMode || isInteractivePresentation) && !!socketPath;
   const labState = useLabFeedback(
-    isLabMode
+    useIPC
       ? {
           socketPath,
           onTaskCompleted: handleLabTaskCompleted,
           onAddDynamicStep: handleAddDynamicStep,
+          onHighlight: handleHighlight,
+          onClearHighlight: handleClearHighlight,
         }
       : null
   );
@@ -279,6 +329,41 @@ export function VTACanvas({
       return;
     }
 
+    // Interactive presentation mode controls
+    if (isInteractivePresentation) {
+      // 'e' - Enter guided mode (explain current slide)
+      if (input === "e" || input === "E") {
+        setPresentationMode("guided");
+        setHighlightedSegment(null);
+        // Write mode change to state file if socketPath exists
+        if (socketPath) {
+          writePresentationStateUpdate(socketPath, { mode: "guided" });
+        }
+        return;
+      }
+
+      // 'g' - Enter guided mode
+      if (input === "g" || input === "G") {
+        setPresentationMode("guided");
+        setHighlightedSegment(null);
+        if (socketPath) {
+          writePresentationStateUpdate(socketPath, { mode: "guided" });
+        }
+        return;
+      }
+
+      // Arrow navigation switches to browse mode
+      if (key.leftArrow || key.rightArrow) {
+        if (presentationMode === "guided") {
+          setPresentationMode("browse");
+          setHighlightedSegment(null);
+          if (socketPath) {
+            writePresentationStateUpdate(socketPath, { mode: "browse" });
+          }
+        }
+      }
+    }
+
     // Tab to switch focus
     if (key.tab) {
       setFocusMode((prev) => (prev === "sidebar" ? "content" : "sidebar"));
@@ -289,6 +374,10 @@ export function VTACanvas({
     if (key.leftArrow || input === "p") {
       if (currentStepIndex > 0) {
         setCurrentStepIndex((prev) => prev - 1);
+        // Update state file for interactive presentations
+        if (isInteractivePresentation && socketPath) {
+          writePresentationStateUpdate(socketPath, { slideIndex: currentStepIndex - 1 });
+        }
       }
       return;
     }
@@ -527,13 +616,26 @@ export function VTACanvas({
           focused={focusMode === "sidebar"}
         />
 
-        {/* Task Panel or Debug Panel */}
+        {/* Content Panel - varies by mode */}
         {showDebugPanel && isLabMode ? (
           <DebugPanel
             labState={labState}
             width={contentWidth}
             height={contentHeight}
             logDir={socketPath ? deriveLogDir(socketPath) : undefined}
+          />
+        ) : isInteractivePresentation ? (
+          <PresentationContent
+            title={currentStep.title}
+            instructions={currentStep.content.instructions || ""}
+            segments={currentStep.content.narrationSegments || []}
+            highlightedSegment={highlightedSegment}
+            mode={presentationMode}
+            slideIndex={currentStepIndex}
+            totalSlides={module.steps.length}
+            width={contentWidth}
+            height={contentHeight}
+            focused={focusMode === "content"}
           />
         ) : (
           <TaskPanel

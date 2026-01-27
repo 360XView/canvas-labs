@@ -372,8 +372,9 @@ program
   .description("View a presentation in the terminal")
   .option("--list", "List available presentations")
   .option("--file <path>", "Load presentation from a specific YAML file path")
+  .option("--interactive", "Start with Tutor narration (requires tmux)")
   .action(async (presentationId: string | undefined, options) => {
-    const { loadPresentation, loadPresentationFromFile, listPresentations } = await import("./presentation/loader");
+    const { loadPresentation, loadPresentationFromFile, listPresentations, isInteractivePresentation, isInteractivePresentationById } = await import("./presentation/loader");
 
     // List mode
     if (options.list) {
@@ -384,7 +385,8 @@ program
       }
       console.log("Available presentations:\n");
       for (const pres of presentations) {
-        console.log(`  ${pres.id}`);
+        const interactiveMarker = pres.isInteractive ? " [interactive]" : "";
+        console.log(`  ${pres.id}${interactiveMarker}`);
         console.log(`    ${pres.title} (${pres.slideCount} slides)`);
         if (pres.description) {
           console.log(`    ${pres.description}`);
@@ -398,23 +400,73 @@ program
     try {
       let module;
       let id;
+      let isInteractive = false;
 
       if (options.file) {
         // Load from specific file path
         module = loadPresentationFromFile(options.file);
         id = module.id;
+        isInteractive = isInteractivePresentation(options.file);
       } else if (presentationId) {
         // Load from presentations/ directory by ID
         module = loadPresentation(presentationId);
         id = presentationId;
+        isInteractive = isInteractivePresentationById(presentationId);
       } else {
         console.log("Usage: present <id> or present --file <path>");
         console.log("       present --list to see available presentations");
+        console.log("       present <id> --interactive for Tutor-guided mode");
         return;
       }
 
-      const { renderCanvas } = await import("./canvases");
-      await renderCanvas("vta", id, { module }, { scenario: "presentation" });
+      // If --interactive flag or presentation is interactive type, spawn with tutor
+      if (options.interactive || isInteractive) {
+        const { spawnSync } = await import("child_process");
+
+        // Check tmux is available
+        const tmuxCheck = spawnSync("which", ["tmux"], { stdio: "pipe" });
+        if (tmuxCheck.status !== 0) {
+          console.error("Interactive mode requires tmux. Install with: brew install tmux");
+          process.exit(1);
+        }
+
+        const { spawnInteractivePresentation } = await import("./presentation/spawn");
+        await spawnInteractivePresentation({
+          presentationPath: options.file,
+          presentationId: options.file ? undefined : presentationId,
+        });
+      } else {
+        // Regular presentation mode
+        const { renderCanvas } = await import("./canvases");
+        await renderCanvas("vta", id, { module }, { scenario: "presentation" });
+      }
+    } catch (error) {
+      console.error(`Error: ${error instanceof Error ? error.message : error}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command("present-gen <inputPath>")
+  .description("Generate interactive presentation YAML from markdown")
+  .option("-o, --output <path>", "Output file path (default: same as input with .yaml)")
+  .option("-t, --title <title>", "Presentation title (default: first heading)")
+  .option("-d, --desc <text>", "Presentation description")
+  .action(async (inputPath: string, options) => {
+    const { generatePresentation } = await import("./presentation/generator");
+
+    try {
+      const result = generatePresentation({
+        inputPath,
+        outputPath: options.output,
+        title: options.title,
+        description: options.desc,
+      });
+
+      console.log(`Generated presentation:`);
+      console.log(`  Output: ${result.outputPath}`);
+      console.log(`  Slides: ${result.slideCount}`);
+      console.log(`  Segments: ${result.segmentCount}`);
     } catch (error) {
       console.error(`Error: ${error instanceof Error ? error.message : error}`);
       process.exit(1);

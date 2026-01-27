@@ -29,6 +29,9 @@ export interface UseLabFeedbackOptions {
   onTaskCompleted?: (stepId: string, taskId: string) => void;
   onStatusChange?: (status: "running" | "stopped", message?: string) => void;
   onAddDynamicStep?: (step: DynamicStep, afterStepId?: string) => void;
+  // Interactive presentation callbacks
+  onHighlight?: (segmentIndex: number) => void;
+  onClearHighlight?: () => void;
 }
 
 export function useLabFeedback(options: UseLabFeedbackOptions | null) {
@@ -99,6 +102,10 @@ export function useLabFeedback(options: UseLabFeedbackOptions | null) {
         options?.onStatusChange?.(msg.status, msg.message);
       } else if (msg.type === "addDynamicStep") {
         options?.onAddDynamicStep?.(msg.step, msg.afterStepId);
+      } else if (msg.type === "highlight") {
+        options?.onHighlight?.(msg.segmentIndex);
+      } else if (msg.type === "clearHighlight") {
+        options?.onClearHighlight?.();
       }
     },
     [options, addEvent]
