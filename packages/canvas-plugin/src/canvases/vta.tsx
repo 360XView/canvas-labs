@@ -232,6 +232,35 @@ export function VTACanvas({
     setHighlightedSegment(null);
   }, []);
 
+  // Handle navigation messages from tutor (interactive presentation)
+  const handleNextSlide = useCallback(() => {
+    setCurrentStepIndex((prev) => {
+      const newIndex = Math.min(prev + 1, module.steps.length - 1);
+      if (effectiveLogDir && newIndex !== prev) {
+        writePresentationStateUpdate(effectiveLogDir, { slideIndex: newIndex });
+      }
+      return newIndex;
+    });
+  }, [module.steps.length, effectiveLogDir]);
+
+  const handlePreviousSlide = useCallback(() => {
+    setCurrentStepIndex((prev) => {
+      const newIndex = Math.max(prev - 1, 0);
+      if (effectiveLogDir && newIndex !== prev) {
+        writePresentationStateUpdate(effectiveLogDir, { slideIndex: newIndex });
+      }
+      return newIndex;
+    });
+  }, [effectiveLogDir]);
+
+  const handleNavigateToSlide = useCallback((slideIndex: number) => {
+    const clampedIndex = Math.max(0, Math.min(slideIndex, module.steps.length - 1));
+    setCurrentStepIndex(clampedIndex);
+    if (effectiveLogDir) {
+      writePresentationStateUpdate(effectiveLogDir, { slideIndex: clampedIndex });
+    }
+  }, [module.steps.length, effectiveLogDir]);
+
   // Lab feedback hook - active in lab mode and interactive presentation mode
   const isLabMode = scenario === "lab" && !!socketPath;
   const useIPC = (isLabMode || isInteractivePresentation) && !!socketPath;
@@ -243,6 +272,9 @@ export function VTACanvas({
           onAddDynamicStep: handleAddDynamicStep,
           onHighlight: handleHighlight,
           onClearHighlight: handleClearHighlight,
+          onNextSlide: handleNextSlide,
+          onPreviousSlide: handlePreviousSlide,
+          onNavigateToSlide: handleNavigateToSlide,
         }
       : null
   );

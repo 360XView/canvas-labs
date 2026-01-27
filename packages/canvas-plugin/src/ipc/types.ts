@@ -57,7 +57,10 @@ export type LabMessage =
   | { type: "ping" }
   // Interactive presentation messages (Tutor → VTA)
   | { type: "highlight"; segmentIndex: number }
-  | { type: "clearHighlight" };
+  | { type: "clearHighlight" }
+  | { type: "nextSlide" }
+  | { type: "previousSlide" }
+  | { type: "navigateToSlide"; slideIndex: number };
 
 // Socket path convention
 export function getSocketPath(id: string): string {

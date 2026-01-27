@@ -32,6 +32,9 @@ export interface UseLabFeedbackOptions {
   // Interactive presentation callbacks
   onHighlight?: (segmentIndex: number) => void;
   onClearHighlight?: () => void;
+  onNextSlide?: () => void;
+  onPreviousSlide?: () => void;
+  onNavigateToSlide?: (slideIndex: number) => void;
 }
 
 export function useLabFeedback(options: UseLabFeedbackOptions | null) {
@@ -106,6 +109,12 @@ export function useLabFeedback(options: UseLabFeedbackOptions | null) {
         options?.onHighlight?.(msg.segmentIndex);
       } else if (msg.type === "clearHighlight") {
         options?.onClearHighlight?.();
+      } else if (msg.type === "nextSlide") {
+        options?.onNextSlide?.();
+      } else if (msg.type === "previousSlide") {
+        options?.onPreviousSlide?.();
+      } else if (msg.type === "navigateToSlide") {
+        options?.onNavigateToSlide?.(msg.slideIndex);
       }
     },
     [options, addEvent]

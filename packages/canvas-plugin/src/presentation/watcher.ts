@@ -87,6 +87,26 @@ async function main() {
             console.log(`Sent clearHighlight`);
             break;
 
+          case "nextSlide":
+            sendToVTA({ type: "nextSlide" });
+            console.log(`Sent nextSlide`);
+            break;
+
+          case "previousSlide":
+            sendToVTA({ type: "previousSlide" });
+            console.log(`Sent previousSlide`);
+            break;
+
+          case "navigateToSlide":
+            if (cmd.payload?.slideIndex !== undefined) {
+              sendToVTA({
+                type: "navigateToSlide",
+                slideIndex: cmd.payload.slideIndex,
+              });
+              console.log(`Sent navigateToSlide: ${cmd.payload.slideIndex}`);
+            }
+            break;
+
           default:
             console.log(`Unknown command type: ${cmd.type}`);
         }

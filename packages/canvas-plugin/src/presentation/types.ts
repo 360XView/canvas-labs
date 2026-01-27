@@ -39,8 +39,9 @@ export interface PresentationState {
 export interface PresentationTutorCommand {
   id: string;
   timestamp: string;
-  type: "highlight" | "clearHighlight" | "nextSlide" | "previousSlide";
+  type: "highlight" | "clearHighlight" | "nextSlide" | "previousSlide" | "navigateToSlide";
   payload?: {
     segmentIndex?: number;
+    slideIndex?: number;
   };
 }

@@ -290,6 +290,54 @@ EOF
 
 Change \`segmentIndex\` to highlight different segments (0, 1, 2, etc.)
 
+## How to Navigate Slides
+
+**Next slide:**
+\`\`\`bash
+cat > ${logDir}/tutor-commands.json << 'EOF'
+{
+  "commands": [
+    {
+      "id": "nav-next-$(date +%s)",
+      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "type": "nextSlide"
+    }
+  ]
+}
+EOF
+\`\`\`
+
+**Previous slide:**
+\`\`\`bash
+cat > ${logDir}/tutor-commands.json << 'EOF'
+{
+  "commands": [
+    {
+      "id": "nav-prev-$(date +%s)",
+      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "type": "previousSlide"
+    }
+  ]
+}
+EOF
+\`\`\`
+
+**Go to specific slide (0-indexed):**
+\`\`\`bash
+cat > ${logDir}/tutor-commands.json << 'EOF'
+{
+  "commands": [
+    {
+      "id": "nav-goto-$(date +%s)",
+      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+      "type": "navigateToSlide",
+      "payload": { "slideIndex": 2 }
+    }
+  ]
+}
+EOF
+\`\`\`
+
 ## Your Role
 
 **In GUIDED mode** (mode="guided"):
