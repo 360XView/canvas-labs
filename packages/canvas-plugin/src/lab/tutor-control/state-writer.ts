@@ -69,7 +69,7 @@ export interface OverallScoreUpdate {
 
 export interface StateWriter {
   initialize: (stepIds: string[]) => void;
-  markCompleted: (stepId: string, source: "command" | "check" | "tutor") => void;
+  markCompleted: (stepId: string, source: "command" | "check" | "tutor" | "question") => void;
   addStep: (stepId: string, afterStepId?: string) => void;
   recordQuestionAnswer: (stepId: string, result: QuestionResult) => void;
   updateStepScore: (stepId: string, score: StepScoreUpdate) => void;
@@ -125,7 +125,7 @@ export function createStateWriter(options: StateWriterOptions): StateWriter {
       log(`State initialized with ${stepIds.length} steps`);
     },
 
-    markCompleted(stepId: string, source: "command" | "check" | "tutor") {
+    markCompleted(stepId: string, source: "command" | "check" | "tutor" | "question") {
       const state = readState();
       if (!state) {
         log(`Cannot mark completed: state not initialized`);

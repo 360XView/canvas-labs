@@ -543,13 +543,31 @@ export function VTACanvas({
         const nextHint = hints.find((h) => !hintsRevealed.has(h.id));
         if (nextHint) {
           setHintsRevealed((prev) => new Set([...prev, nextHint.id]));
+          // Send telemetry for hint request
+          const hintIndex = hints.findIndex((h) => h.id === nextHint.id);
+          if (isLabMode) {
+            labState.sendMessage({
+              type: "hintRequested",
+              stepId: currentStep.id,
+              hintIndex,
+              totalHints: hints.length,
+            });
+          }
         }
         return;
       }
 
       // Toggle solution
       if (input === "s" || input === "S") {
+        const wasRevealed = solutionRevealed;
         setSolutionRevealed((prev) => !prev);
+        // Send telemetry only when revealing (not hiding)
+        if (!wasRevealed && isLabMode) {
+          labState.sendMessage({
+            type: "solutionViewed",
+            stepId: currentStep.id,
+          });
+        }
         return;
       }
 

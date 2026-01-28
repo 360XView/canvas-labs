@@ -27,7 +27,7 @@ export interface UnifiedLabEvent {
  */
 export interface StepCompletionEvent {
   stepId: string;
-  source: "command" | "check" | "tutor";
+  source: "command" | "check" | "tutor" | "question";
   taskIndex?: number;
   timestamp: string;
 }

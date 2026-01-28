@@ -16,7 +16,7 @@ export interface EventHubOptions {
   logDir: string;
   moduleId: string;
   studentId?: string;
-  onTaskCompleted?: (stepId: string, source: "command" | "check" | "tutor") => void;
+  onTaskCompleted?: (stepId: string, source: "command" | "check" | "tutor" | "question") => void;
   onError?: (error: Error) => void;
   onLog?: (message: string) => void;
 }
@@ -138,6 +138,37 @@ export function createEventHub(options: EventHubOptions): EventHub {
   }
 
   /**
+   * Handle incoming messages from VTA canvas
+   */
+  function handleVTAMessage(msg: LabMessage): void {
+    if (!eventLogger) return;
+
+    switch (msg.type) {
+      case "hintRequested":
+        eventLogger.logHintRequested(msg.stepId, msg.hintIndex, msg.totalHints);
+        log(`VTA: Hint requested for step ${msg.stepId}`);
+        break;
+      case "solutionViewed":
+        eventLogger.logSolutionViewed(msg.stepId);
+        log(`VTA: Solution viewed for step ${msg.stepId}`);
+        break;
+      case "questionAnswered":
+        eventLogger.logQuestionAnswered(
+          msg.stepId,
+          msg.isCorrect,
+          msg.selectedOptions,
+          msg.correctOptions,
+          msg.attempts
+        );
+        log(`VTA: Question answered for step ${msg.stepId}`);
+        if (msg.isCorrect && !completedSteps.has(msg.stepId)) {
+          handleStepCompleted({ stepId: msg.stepId, source: "question", taskIndex: 0 });
+        }
+        break;
+    }
+  }
+
+  /**
    * Connect to vTA canvas via IPC socket with retry logic
    * Retries up to 10 times with 500ms delay to handle race condition
    * where monitor starts before VTA has created the socket
@@ -162,7 +193,7 @@ export function createEventHub(options: EventHubOptions): EventHub {
                 if (line.trim()) {
                   try {
                     const msg = JSON.parse(line) as LabMessage;
-                    // Handle incoming messages from vTA if needed
+                    handleVTAMessage(msg);
                   } catch (e) {
                     // Skip invalid JSON
                   }

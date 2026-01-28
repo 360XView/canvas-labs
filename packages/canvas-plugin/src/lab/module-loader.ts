@@ -32,12 +32,15 @@ interface YamlModule {
   steps: YamlStep[];
 }
 
+// Hints can be either plain strings or objects with id/text
+type YamlHint = string | { id?: string; text: string };
+
 interface YamlStep {
   id: string;
   title: string;
   type: "introduction" | "task" | "question" | "summary";
   content: YamlStepContent;
-  hints?: string[];
+  hints?: YamlHint[];
   solution?: YamlSolution;
   validation?: YamlValidation;
 }
@@ -175,18 +178,33 @@ function parseModuleYaml(moduleId: string): YamlModule {
 }
 
 /**
- * Convert YAML hints array (strings) to Hint objects with generated IDs
+ * Convert YAML hints array to Hint objects
+ * Supports both formats:
+ * - Plain strings: ["hint text 1", "hint text 2"]
+ * - Objects: [{id: "hint-1", text: "hint text"}]
  */
-function convertHints(hints: string[] | undefined, stepId: string): Hint[] {
+function convertHints(hints: YamlHint[] | undefined, stepId: string): Hint[] {
   if (!hints || hints.length === 0) {
     return [];
   }
 
-  return hints.map((text, index) => ({
-    id: `${stepId}-hint-${index + 1}`,
-    text,
-    revealed: false,
-  }));
+  return hints.map((hint, index) => {
+    // Handle both string and object formats
+    if (typeof hint === "string") {
+      return {
+        id: `${stepId}-hint-${index + 1}`,
+        text: hint,
+        revealed: false,
+      };
+    } else {
+      // Object format with id and text
+      return {
+        id: hint.id || `${stepId}-hint-${index + 1}`,
+        text: hint.text,
+        revealed: false,
+      };
+    }
+  });
 }
 
 /**

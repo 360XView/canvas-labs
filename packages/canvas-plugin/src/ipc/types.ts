@@ -54,6 +54,8 @@ export type LabMessage =
   | { type: "addDynamicStep"; step: DynamicStep; afterStepId?: string }
   | { type: "tutorCommandAck"; commandId: string; status: "done" | "error"; message?: string }
   | { type: "questionAnswered"; stepId: string; isCorrect: boolean; selectedOptions: string[]; correctOptions: string[]; attempts: number }
+  | { type: "hintRequested"; stepId: string; hintIndex: number; totalHints: number }
+  | { type: "solutionViewed"; stepId: string }
   | { type: "ping" }
   // Interactive presentation messages (Tutor → VTA)
   | { type: "highlight"; segmentIndex: number }
