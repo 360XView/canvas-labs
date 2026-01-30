@@ -40,3 +40,4 @@ temp/
 # Lab runtime files (generated during lab execution)
 /tmp/lab-logs-*
 packages/tui-testing/
+.worktrees/
