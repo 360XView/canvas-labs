@@ -297,13 +297,22 @@ export function VTACanvas({
     };
   }, [stdout]);
 
-  // Reset state when step changes
+  // Reset state when step changes and send telemetry
   useEffect(() => {
     setHintsRevealed(new Set());
     setSolutionRevealed(false);
     setSelectedOptions(new Set());
     setScrollOffset(0);
-  }, [currentStepIndex]);
+
+    // Send step viewed telemetry in lab mode
+    if (isLabMode && currentStep) {
+      labState.sendMessage({
+        type: "stepViewed",
+        stepId: currentStep.id,
+        stepType: currentStep.type as "introduction" | "task" | "question" | "summary",
+      });
+    }
+  }, [currentStepIndex, isLabMode, currentStep?.id, currentStep?.type, labState]);
 
   // Auto-complete view-only steps (introduction, summary) when entering them
   useEffect(() => {
