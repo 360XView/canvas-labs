@@ -56,6 +56,7 @@ export type LabMessage =
   | { type: "questionAnswered"; stepId: string; isCorrect: boolean; selectedOptions: string[]; correctOptions: string[]; attempts: number }
   | { type: "hintRequested"; stepId: string; hintIndex: number; totalHints: number }
   | { type: "solutionViewed"; stepId: string }
+  | { type: "stepViewed"; stepId: string; previousStepId?: string; stepType: "introduction" | "task" | "question" | "summary" }
   | { type: "ping" }
   // Interactive presentation messages (Tutor → VTA)
   | { type: "highlight"; segmentIndex: number }
