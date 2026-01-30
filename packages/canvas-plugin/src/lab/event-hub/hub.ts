@@ -152,6 +152,10 @@ export function createEventHub(options: EventHubOptions): EventHub {
         eventLogger.logSolutionViewed(msg.stepId);
         log(`VTA: Solution viewed for step ${msg.stepId}`);
         break;
+      case "stepViewed":
+        eventLogger.logStepStarted(msg.stepId, msg.stepType);
+        log(`VTA: Step viewed: ${msg.stepId} (${msg.stepType})`);
+        break;
       case "questionAnswered":
         eventLogger.logQuestionAnswered(
           msg.stepId,
