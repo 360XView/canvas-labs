@@ -361,10 +361,10 @@ export async function spawnLabEnvironment(
     // When not in tmux, target by session name (session:pane format)
     const tutorTarget = inTmux ? `lab-${moduleId}.0` : `${sessionName}:0.0`;
 
-    // Start tutor watcher in background
+    // Start tutor watcher in background (pass socketPath for heartbeat)
     const watcherProcess = spawn(
       "bun",
-      ["run", `${basePath}/src/lab/tutor-watcher.ts`, logDir, tutorTarget],
+      ["run", `${basePath}/src/lab/tutor-watcher.ts`, logDir, tutorTarget, socketPath],
       {
         detached: true,
         stdio: "ignore",

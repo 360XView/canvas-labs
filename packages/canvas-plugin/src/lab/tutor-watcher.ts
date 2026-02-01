@@ -10,6 +10,7 @@ const execFileAsync = promisify(execFile);
 // Get CLI arguments (declared early for log function)
 const logsDir = process.argv[2];
 const tmuxTarget = process.argv[3] || "lab:0.0";
+const socketPath = process.argv[4]; // Optional: for heartbeat
 
 // Log to file for debugging (since process runs detached)
 function log(message: string): void {
@@ -207,16 +208,38 @@ function startWatching(): void {
   }, STARTUP_DELAY_MS);
 }
 
+// Heartbeat for orphan detection (initialized after start)
+let heartbeat: { stop: () => void } | null = null;
+
 // Handle shutdown
 process.on("SIGINT", () => {
   log("\n[tutor-watcher] Shutting down...");
+  heartbeat?.stop();
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
   log("[tutor-watcher] Shutting down...");
+  heartbeat?.stop();
   process.exit(0);
 });
 
 // Start the watcher
 startWatching();
+
+// Start heartbeat if socket path provided
+if (socketPath) {
+  const { createHeartbeat } = await import("./heartbeat");
+  heartbeat = createHeartbeat({
+    socketPath,
+    checkIntervalMs: 30_000,
+    missedChecksBeforeExit: 3,
+    onOrphaned: () => {
+      log("[tutor-watcher] Session ended, shutting down...");
+      heartbeat?.stop();
+      process.exit(0);
+    },
+    onLog: log,
+  });
+  heartbeat.start();
+}
