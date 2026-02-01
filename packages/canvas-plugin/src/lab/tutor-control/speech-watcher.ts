@@ -28,10 +28,11 @@ export async function startSpeechWatcher(
     // Check if file exists and has new content
     if (!existsSync(filePath)) return;
 
+    let currentSize: number;
     try {
       const stats = statSync(filePath);
-      if (stats.size <= lastSize) return; // No new content
-      lastSize = stats.size;
+      currentSize = stats.size;
+      if (currentSize <= lastSize) return; // No new content
     } catch {
       return;
     }
@@ -51,6 +52,7 @@ export async function startSpeechWatcher(
 
       if (bytesRead > 0) {
         position += bytesRead;
+        lastSize = currentSize; // Update only after successful read
         const lines = buffer
           .slice(0, bytesRead)
           .toString()
