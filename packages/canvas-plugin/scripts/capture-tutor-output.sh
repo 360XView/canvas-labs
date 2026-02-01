@@ -39,7 +39,7 @@ RESPONSE=$(grep '"role":"assistant"' "$TRANSCRIPT_PATH" | tail -1 | jq -r '.mess
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 CLAUDE_SESSION=$(echo "$EVENT" | jq -r '.session_id // empty')
 
-jq -n \
+jq -nc \
     --arg ts "$TIMESTAMP" \
     --arg lab_sid "$SESSION_ID" \
     --arg claude_sid "$CLAUDE_SESSION" \
