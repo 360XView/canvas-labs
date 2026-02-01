@@ -340,10 +340,10 @@ export async function spawnLabEnvironment(
   }
   monitorProcess.unref();
 
-  // Start progress updater in background
+  // Start progress updater in background (pass socketPath for heartbeat)
   const progressUpdaterProcess = spawn(
     "bun",
-    ["run", `${basePath}/src/tutor/progress-updater.ts`, logDir, profileName, moduleId],
+    ["run", `${basePath}/src/tutor/progress-updater.ts`, logDir, profileName, moduleId, socketPath],
     {
       detached: true,
       stdio: "ignore",

@@ -21,9 +21,10 @@ interface UpdaterState {
 const logsDir = process.argv[2];
 const profileId = process.argv[3];
 const moduleId = process.argv[4];
+const socketPath = process.argv[5]; // Optional: for heartbeat
 
 if (!logsDir || !profileId || !moduleId) {
-  console.error("Usage: bun run progress-updater.ts <logs-dir> <profile-id> <module-id>");
+  console.error("Usage: bun run progress-updater.ts <logs-dir> <profile-id> <module-id> [socket-path]");
   process.exit(1);
 }
 
@@ -235,9 +236,15 @@ function startWatching(): void {
   });
 }
 
+// Heartbeat for orphan detection (initialized after start)
+let heartbeat: { stop: () => void } | null = null;
+
 // Handle shutdown - save final progress
 function shutdown(): void {
   console.log("[progress-updater] Shutting down, saving final progress...");
+
+  // Stop heartbeat if running
+  heartbeat?.stop();
 
   try {
     const progress = getProgress(profileId);
@@ -270,3 +277,19 @@ process.on("SIGTERM", shutdown);
 
 // Start the watcher
 startWatching();
+
+// Start heartbeat if socket path provided
+if (socketPath) {
+  const { createHeartbeat } = await import("../lab/heartbeat");
+  heartbeat = createHeartbeat({
+    socketPath,
+    checkIntervalMs: 30_000,
+    missedChecksBeforeExit: 3,
+    onOrphaned: () => {
+      console.log("[progress-updater] Session ended, shutting down...");
+      shutdown();
+    },
+    onLog: (msg) => console.log(msg),
+  });
+  heartbeat.start();
+}
