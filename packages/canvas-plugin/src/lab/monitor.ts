@@ -86,6 +86,9 @@ if (import.meta.main) {
   const [logPath, socketPath, moduleId, providedLabType] = args;
   const labType = (providedLabType ?? process.env.LAB_TYPE ?? "linux_cli") as LabType;
 
+  // Import heartbeat dynamically to avoid circular deps
+  const { createHeartbeat } = await import("./heartbeat");
+
   const monitor = await createMonitor({
     logPath,
     socketPath,
@@ -104,14 +107,30 @@ if (import.meta.main) {
 
   await monitor.start();
 
+  // Start heartbeat to detect orphaned state
+  const heartbeat = createHeartbeat({
+    socketPath,
+    checkIntervalMs: 30_000, // Check every 30s
+    missedChecksBeforeExit: 3, // Exit after 3 missed checks (90s)
+    onOrphaned: () => {
+      console.log("[monitor] Session ended, shutting down...");
+      monitor.stop();
+      process.exit(0);
+    },
+    onLog: (msg) => console.log(msg),
+  });
+  heartbeat.start();
+
   // Handle shutdown
   process.on("SIGINT", () => {
     console.log("\nShutting down...");
+    heartbeat.stop();
     monitor.stop();
     process.exit(0);
   });
 
   process.on("SIGTERM", () => {
+    heartbeat.stop();
     monitor.stop();
     process.exit(0);
   });
