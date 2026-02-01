@@ -151,6 +151,18 @@ export interface SessionEndedEvent extends TelemetryEventBase {
   };
 }
 
+/**
+ * Tutor utterance event - captured from Claude Code tutor via Stop hooks
+ * Used for evaluation and conversation analysis
+ */
+export interface TutorUtteranceEvent {
+  timestamp: string;
+  session_id: string;
+  claude_session_id: string;
+  event_type: "tutor_utterance";
+  content: string;
+}
+
 export type TelemetryEvent =
   | CommandExecutedEvent
   | StudentActionEvent  // NEW: Unified action event
@@ -162,7 +174,8 @@ export type TelemetryEvent =
   | StepStartedEvent
   | StepCompletedEvent
   | SessionStartedEvent
-  | SessionEndedEvent;
+  | SessionEndedEvent
+  | TutorUtteranceEvent;
 
 // ============================================================================
 // EVIDENCE (Derived from Events)

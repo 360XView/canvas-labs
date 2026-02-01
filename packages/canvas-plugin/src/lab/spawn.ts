@@ -71,6 +71,7 @@ export async function spawnLabEnvironment(
   writeFileSync(logPath, ""); // Create empty commands log file
   writeFileSync(`${logDir}/checks.log`, ""); // Create empty checks log file
   writeFileSync(`${logDir}/tutor-commands.json`, JSON.stringify({ commands: [] }, null, 2)); // Tutor control file
+  writeFileSync(`${logDir}/tutor-speech.jsonl`, ""); // Tutor utterance capture (from Claude Code Stop hooks)
   writeFileSync(`${logDir}/state.json`, JSON.stringify({
     version: 1,
     lastUpdated: new Date().toISOString(),
@@ -178,6 +179,11 @@ export async function spawnLabEnvironment(
     // Absolute paths use // prefix (like .gitignore syntax)
     // Use :* prefix matching for Bash commands
     const settingsPath = join(claudeDir, "settings.local.json");
+
+    // Build capture script command with env vars baked in
+    const captureScriptPath = resolve(basePath, "scripts/capture-tutor-output.sh");
+    const hookCommand = `LAB_LOG_DIR="${logDir}" LAB_SESSION_ID="${labId}" "${captureScriptPath}"`;
+
     const settings = {
       model: "haiku",
       permissions: {
@@ -187,6 +193,19 @@ export async function spawnLabEnvironment(
           "Glob(//tmp/**)",
           "Bash(ls:*)",
           "Bash(cat:*)",
+        ],
+      },
+      hooks: {
+        Stop: [
+          {
+            matcher: {},
+            hooks: [
+              {
+                type: "command",
+                command: hookCommand,
+              },
+            ],
+          },
         ],
       },
     };

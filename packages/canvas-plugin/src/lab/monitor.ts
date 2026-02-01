@@ -7,6 +7,7 @@ import type { LabType } from "./telemetry/types";
 import { createEventHubForLab, type CreateEventHubForLabOptions } from "./event-hub/factory";
 import type { EventHub } from "./event-hub/hub";
 import type { EventLogger } from "./telemetry/event-logger";
+import { startSpeechWatcher } from "./tutor-control/speech-watcher";
 
 export interface MonitorOptions {
   logPath: string;
@@ -33,14 +34,15 @@ export async function createMonitor(options: MonitorOptions): Promise<Monitor> {
   const { logPath, socketPath, moduleId, studentId = "anonymous", labType = "linux_cli", onTaskCompleted, onError, onLog } = options;
 
   // Default checks.log to same directory as commands.log
-  const checksLogPath = options.checksLogPath ?? join(dirname(logPath), "checks.log");
+  const logDir = dirname(logPath);
+  const checksLogPath = options.checksLogPath ?? join(logDir, "checks.log");
 
   // Create event hub with appropriate adapter
   const hub = createEventHubForLab({
     labType,
     moduleId,
     logPath,
-    logDir: dirname(logPath),
+    logDir,
     socketPath,
     studentId,
     checksLogPath,
@@ -51,12 +53,37 @@ export async function createMonitor(options: MonitorOptions): Promise<Monitor> {
     onLog,
   });
 
+  // Speech watcher cleanup function (set after start)
+  let stopSpeechWatcher: (() => void) | null = null;
+
   return {
     async start() {
       await hub.start();
+
+      // Start speech watcher to capture tutor utterances
+      try {
+        stopSpeechWatcher = await startSpeechWatcher({
+          logDir,
+          onUtterance: (event) => {
+            hub.emitTutorUtterance(event);
+            onLog?.(`Speech watcher: tutor utterance captured`);
+          },
+          onError: (err) => {
+            onLog?.(`Speech watcher error: ${err.message}`);
+          },
+        });
+        onLog?.("Speech watcher started");
+      } catch (e) {
+        onLog?.(`Warning: Could not start speech watcher: ${e}`);
+      }
     },
 
     stop() {
+      // Stop speech watcher first
+      if (stopSpeechWatcher) {
+        stopSpeechWatcher();
+        stopSpeechWatcher = null;
+      }
       hub.stop();
     },
 

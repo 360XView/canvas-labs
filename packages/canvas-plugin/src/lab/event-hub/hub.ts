@@ -1,11 +1,13 @@
 // Event Hub - Central dispatcher for multi-lab telemetry
 // Receives events from lab adapters and routes to telemetry, state, IPC
 
-import { dirname } from "path";
+import { dirname, join } from "path";
+import { appendFileSync } from "fs";
 import type { LabAdapter, UnifiedLabEvent, StepCompletionEvent } from "../adapters/types";
 import { createEventLogger, type EventLogger } from "../telemetry/event-logger";
 import { createStateWriter, type StateWriter } from "../tutor-control/state-writer";
 import type { LabMessage } from "../../ipc/types";
+import type { TutorUtteranceEvent } from "../telemetry/types";
 
 /**
  * Event Hub configuration
@@ -30,6 +32,7 @@ export interface EventHub {
   isRunning(): boolean;
   getEventLogger(): EventLogger | null;
   getSessionId(): string | null;
+  emitTutorUtterance(event: TutorUtteranceEvent): void;
 }
 
 /**
@@ -376,6 +379,19 @@ export function createEventHub(options: EventHubOptions): EventHub {
 
     getSessionId() {
       return eventLogger?.getSessionId() ?? null;
+    },
+
+    emitTutorUtterance(event: TutorUtteranceEvent) {
+      // Append tutor utterance directly to telemetry.jsonl
+      // Uses same file as eventLogger for unified telemetry stream
+      const telemetryPath = join(logDir, "telemetry.jsonl");
+      try {
+        const line = JSON.stringify(event) + "\n";
+        appendFileSync(telemetryPath, line);
+        log(`Telemetry: tutor_utterance - ${event.timestamp}`);
+      } catch (e) {
+        onError?.(new Error(`Failed to write tutor utterance: ${e}`));
+      }
     },
   };
 }
