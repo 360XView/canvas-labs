@@ -198,7 +198,7 @@ export async function spawnLabEnvironment(
       hooks: {
         Stop: [
           {
-            matcher: {},
+            // Stop hooks don't support matchers
             hooks: [
               {
                 type: "command",
