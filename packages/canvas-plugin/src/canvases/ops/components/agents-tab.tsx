@@ -141,9 +141,21 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
         </Box>
       )}
 
+      {/* Legend */}
+      <Box marginTop={1}>
+        <Text color={OPS_COLORS.dim}>Status: </Text>
+        <Text color={OPS_COLORS.warning}>ACTIVE+NEW</Text>
+        <Text color={OPS_COLORS.dim}>=commits+new reflection  </Text>
+        <Text color={OPS_COLORS.accent}>ACTIVE</Text>
+        <Text color={OPS_COLORS.dim}>=commits only  </Text>
+        <Text color={OPS_COLORS.warning}>NEW REFL</Text>
+        <Text color={OPS_COLORS.dim}>=unsynthesized reflection  </Text>
+        <Text color={OPS_COLORS.dim}>idle=no activity</Text>
+      </Box>
+
       {/* Guidance */}
       {reviewDue && (
-        <Box marginTop={1}>
+        <Box>
           <Text color={OPS_COLORS.warning}>
             Review cycle is due. Run /wpm_review_cycle in WPM to synthesize {newReflectionsSinceLastPlan} new reflections.
           </Text>
