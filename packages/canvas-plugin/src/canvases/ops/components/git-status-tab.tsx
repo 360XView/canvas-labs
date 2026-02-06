@@ -12,6 +12,52 @@ function truncate(s: string, maxLen: number): string {
   return s.slice(0, maxLen - 1) + "\u2026";
 }
 
+interface Advice {
+  text: string;
+  color: string;
+}
+
+function getGitAdvice(repo: RepoGitStatus): Advice[] {
+  const advice: Advice[] = [];
+
+  // Dirty files
+  if (repo.dirty) {
+    const n = repo.dirtyFiles.length;
+    if (n > 20) {
+      advice.push({ text: `${n} uncommitted files \u2014 consider committing or stashing`, color: OPS_COLORS.error });
+    } else if (n > 0) {
+      advice.push({ text: `${n} uncommitted file${n > 1 ? "s" : ""} \u2014 commit or stash when ready`, color: OPS_COLORS.warning });
+    }
+  }
+
+  // Ahead of remote
+  if (repo.hasRemote && repo.ahead > 0 && repo.behind === 0) {
+    advice.push({ text: `${repo.ahead} commit${repo.ahead > 1 ? "s" : ""} ahead \u2014 ready to push`, color: OPS_COLORS.primary });
+  }
+
+  // Behind remote
+  if (repo.hasRemote && repo.behind > 0 && repo.ahead === 0) {
+    advice.push({ text: `${repo.behind} commit${repo.behind > 1 ? "s" : ""} behind \u2014 pull to stay current`, color: OPS_COLORS.warning });
+  }
+
+  // Diverged
+  if (repo.hasRemote && repo.ahead > 0 && repo.behind > 0) {
+    advice.push({ text: `Diverged (\u2191${repo.ahead} \u2193${repo.behind}) \u2014 rebase or merge needed`, color: OPS_COLORS.error });
+  }
+
+  // No remote
+  if (!repo.hasRemote) {
+    advice.push({ text: "No remote tracking \u2014 set upstream to enable push/pull", color: OPS_COLORS.dim });
+  }
+
+  // All clean
+  if (advice.length === 0) {
+    advice.push({ text: "\u2713 All good", color: OPS_COLORS.success });
+  }
+
+  return advice;
+}
+
 interface Props {
   statuses: RepoGitStatus[];
   selectedIdx: number;
@@ -67,6 +113,15 @@ export function GitStatusTab({ statuses, selectedIdx, expanded, innerWidth }: Pr
               <Text color={OPS_COLORS.dim}>
                 {truncate(commitText + ageText, innerWidth - 50)}
               </Text>
+            </Box>
+
+            {/* Advice line */}
+            <Box marginLeft={2}>
+              {getGitAdvice(repo).map((a, ai) => (
+                <Text key={ai} color={a.color}>
+                  {ai > 0 ? "  \u2022  " : ""}{a.text}
+                </Text>
+              ))}
             </Box>
 
             {/* Show dirty files when this repo is selected and expanded */}
