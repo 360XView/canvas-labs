@@ -888,4 +888,20 @@ program
     }
   });
 
+program
+  .command("ops-data")
+  .description("Output ops monitor data as text or JSON (no TUI required)")
+  .option("--tab <name>", "Show specific tab: ops, inbox, tickets, git, ideas, actions, sessions")
+  .option("--json", "Output as JSON instead of text")
+  .action(async (options) => {
+    const { loadOpsData, formatOpsText } = await import("./canvases/ops/data-loaders");
+    const data = loadOpsData();
+
+    if (options.json) {
+      console.log(JSON.stringify(data, null, 2));
+    } else {
+      console.log(formatOpsText(data, options.tab));
+    }
+  });
+
 program.parse();

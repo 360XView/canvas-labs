@@ -3,18 +3,35 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import type { SummaryCounts } from "../types";
+import type { SummaryCounts, ReviewStatus } from "../types";
 import { OPS_COLORS } from "../types";
 
 interface Props {
   counts: SummaryCounts;
+  reviewStatus?: ReviewStatus;
 }
 
-export function SummaryBar({ counts }: Props) {
+export function SummaryBar({ counts, reviewStatus }: Props) {
   const inboxColor = counts.inbox > 0 ? OPS_COLORS.warning : OPS_COLORS.dim;
   const actionsColor = counts.actionsOpen > 0 ? OPS_COLORS.warning : OPS_COLORS.dim;
   const gitAllClean = counts.gitClean === counts.gitTotal;
   const gitColor = gitAllClean ? OPS_COLORS.success : OPS_COLORS.warning;
+
+  // Review status coloring
+  let reviewLabel = "";
+  let reviewColor = OPS_COLORS.dim;
+  if (reviewStatus) {
+    if (reviewStatus.lastActionPlanDaysAgo === -1) {
+      reviewLabel = "NEVER";
+      reviewColor = OPS_COLORS.error;
+    } else if (reviewStatus.reviewDue) {
+      reviewLabel = `${reviewStatus.lastActionPlanDaysAgo}d ago DUE`;
+      reviewColor = reviewStatus.lastActionPlanDaysAgo > 4 ? OPS_COLORS.error : OPS_COLORS.warning;
+    } else {
+      reviewLabel = `${reviewStatus.lastActionPlanDaysAgo}d ago`;
+      reviewColor = OPS_COLORS.success;
+    }
+  }
 
   return (
     <Box>
@@ -42,6 +59,10 @@ export function SummaryBar({ counts }: Props) {
       <Text color={gitColor}>
         {counts.gitClean}/{counts.gitTotal} clean
       </Text>
+      <Text color={OPS_COLORS.dim}>{" \u2502 "}</Text>
+
+      <Text color={OPS_COLORS.dim}>Review: </Text>
+      <Text color={reviewColor}>{reviewLabel}</Text>
     </Box>
   );
 }

@@ -6,6 +6,7 @@ import { Box, Text, useInput, useApp, useStdout } from "ink";
 import { readFileSync, existsSync } from "fs";
 import { join, resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 import type { OpsConfig, TabId, Column } from "./types";
 import { OPS_COLORS, TABS } from "./types";
 import { useOpsData } from "./hooks/use-ops-data";
@@ -17,6 +18,7 @@ import { IdeasTab } from "./components/ideas-tab";
 import { ActionsTab } from "./components/actions-tab";
 import { SessionsTab } from "./components/sessions-tab";
 import { DetailView } from "./components/detail-view";
+import { AgentsTab } from "./components/agents-tab";
 
 interface Props {
   id: string;
@@ -58,11 +60,13 @@ export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Prop
     ideas: 0,
     actions: 0,
     sessions: 0,
+    agents: 0,
   });
   const [expanded, setExpanded] = useState(false);
   const [activeCol, setActiveCol] = useState<Column>("inbox");
   const [inboxIdx, setInboxIdx] = useState(0);
   const [ticketIdx, setTicketIdx] = useState(0);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   // Helpers for selection bounds
   const { flatMessages } = buildInboxRows(data.inboxData);
@@ -77,6 +81,8 @@ export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Prop
         return Math.max(0, data.actions.length - 1);
       case "sessions":
         return Math.max(0, data.tmuxSessions.length - 1);
+      case "agents":
+        return Math.max(0, data.reviewStatus.agentActivity.length - 1);
       default:
         return 0;
     }
@@ -114,6 +120,44 @@ export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Prop
     // Refresh
     if (input === "r") {
       data.refresh();
+      return;
+    }
+
+    // Launch PM triage — tries tmux, iTerm2, Terminal.app in order
+    if (input === "t" && !expanded) {
+      const teamPath = getTeamPathFromConfig(config);
+      const pmDir = join(teamPath, "pm");
+
+      try {
+        if (process.env.TMUX) {
+          // Option 1: tmux — new window in current session
+          execSync(
+            `tmux new-window -n "pm-triage" -c "${pmDir}" 'claude "/ops-triage"'`,
+            { timeout: 5000 }
+          );
+          setStatusMsg("PM triage launched (tmux window)");
+        } else if (process.env.ITERM_SESSION_ID || process.env.TERM_PROGRAM === "iTerm.app") {
+          // Option 2: iTerm2 — new tab via AppleScript
+          execSync([
+            "osascript",
+            "-e", `'tell application "iTerm2" to tell current window'`,
+            "-e", `'create tab with default profile'`,
+            "-e", `'tell current session to write text "cd ${pmDir} && claude \\"/ops-triage\\""'`,
+            "-e", `'end tell'`,
+          ].join(" "), { timeout: 5000 });
+          setStatusMsg("PM triage launched (iTerm2 tab)");
+        } else {
+          // Option 3: Terminal.app — new window via AppleScript
+          execSync(
+            `osascript -e 'tell application "Terminal" to do script "cd ${pmDir} && claude \\"/ops-triage\\""'`,
+            { timeout: 5000 }
+          );
+          setStatusMsg("PM triage launched (Terminal window)");
+        }
+      } catch {
+        setStatusMsg("Failed to launch PM triage");
+      }
+      setTimeout(() => setStatusMsg(null), 3000);
       return;
     }
 
@@ -217,14 +261,14 @@ export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Prop
           {config?.title || "OPS MONITOR"}
         </Text>
         <Text color={OPS_COLORS.dim}>
-          {timeStr} {"\u2022"} 1-5 tabs {"\u2022"} {"\u2191\u2193"} nav {"\u2022"} Enter expand {"\u2022"} r refresh {"\u2022"} q quit
+          {timeStr} {"\u2022"} 1-6 tabs {"\u2022"} {"\u2191\u2193"} nav {"\u2022"} Enter expand {"\u2022"} t triage {"\u2022"} r refresh {"\u2022"} q quit
         </Text>
       </Box>
 
       {/* Tab bar + Summary bar */}
       <Box justifyContent="space-between">
         <TabBar activeTab={activeTab} />
-        <SummaryBar counts={data.counts} />
+        <SummaryBar counts={data.counts} reviewStatus={data.reviewStatus} />
       </Box>
 
       {/* Active tab content */}
@@ -273,13 +317,23 @@ export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Prop
             contentRows={contentRows}
           />
         )}
+        {activeTab === "agents" && (
+          <AgentsTab
+            reviewStatus={data.reviewStatus}
+            selectedIdx={selections.agents}
+            innerWidth={innerWidth}
+            contentRows={contentRows}
+          />
+        )}
       </Box>
 
       {/* Footer */}
       <Box>
-        <Text color={OPS_COLORS.dim}>
-          {footerText}
-        </Text>
+        {statusMsg ? (
+          <Text color={OPS_COLORS.warning}>{statusMsg}</Text>
+        ) : (
+          <Text color={OPS_COLORS.dim}>{footerText}</Text>
+        )}
       </Box>
     </Box>
   );
@@ -441,6 +495,15 @@ function getFooterText(
     case "sessions": {
       const session = data.tmuxSessions[selections.sessions];
       return session ? `\u2192 ${session.name} \u2022 ${session.windows} windows${session.attached ? " \u2022 attached" : ""}` : "";
+    }
+    case "agents": {
+      const act = data.reviewStatus.agentActivity[selections.agents];
+      if (!act) return "";
+      const parts = [`\u2192 ${act.agent}`];
+      if (act.dirtyFiles > 0) parts.push(`${act.dirtyFiles} dirty`);
+      if (act.unpushedCommits > 0) parts.push(`${act.unpushedCommits} unpushed`);
+      if (act.hasMemory) parts.push(`mem: ${act.memoryEntries}`);
+      return parts.join(" \u2022 ");
     }
     default:
       return "";

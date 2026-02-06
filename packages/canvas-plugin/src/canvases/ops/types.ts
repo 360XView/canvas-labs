@@ -51,7 +51,7 @@ export const DEFAULT_AGENTS = [
 export type Column = "inbox" | "tickets";
 
 // Tab system
-export type TabId = "operations" | "git" | "ideas" | "actions" | "sessions";
+export type TabId = "operations" | "git" | "ideas" | "actions" | "sessions" | "agents";
 
 export const TABS: { id: TabId; label: string; key: string }[] = [
   { id: "operations", label: "OPS", key: "1" },
@@ -59,6 +59,7 @@ export const TABS: { id: TabId; label: string; key: string }[] = [
   { id: "ideas", label: "IDEAS", key: "3" },
   { id: "actions", label: "ACTIONS", key: "4" },
   { id: "sessions", label: "SESSIONS", key: "5" },
+  { id: "agents", label: "AGENTS", key: "6" },
 ];
 
 // Git status
@@ -114,6 +115,29 @@ export interface TmuxPane {
   paneIndex: number;
   currentCommand: string;
   currentPath: string;
+}
+
+// Review / Agent status
+export interface AgentActivity {
+  agent: string;
+  commitCount: number;
+  lastCommitMsg: string;
+  dirtyFiles: number;     // uncommitted changes in agent dir
+  unpushedCommits: number; // commits ahead of remote in agent dir
+  inboxCount: number;     // messages waiting in inbox
+  sentCount: number;      // messages sent since last review
+  filesChanged: number;   // files changed since last review
+  memoryEntries: number;  // memory log entries in last 3 days
+  hasMemory: boolean;     // agent has memory system installed
+}
+
+export interface ReviewStatus {
+  lastActionPlanDate: string;  // YYYY-MM-DD or "" if never
+  lastActionPlanDaysAgo: number; // -1 if never
+  agentReflections: { agent: string; lastDate: string; daysAgo: number }[];
+  agentActivity: AgentActivity[];
+  newReflectionsSinceLastPlan: number;
+  reviewDue: boolean; // true if >2 days since last plan, or new reflections unsynthesized
 }
 
 // Summary bar
