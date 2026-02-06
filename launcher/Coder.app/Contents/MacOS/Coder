@@ -1,0 +1,43 @@
+#!/bin/bash
+# Coder - Implementation Agent
+# White/silver theme terminal (clean slate for coding)
+
+CODER_DIR="/Users/taavi/Documents/Main_Docs/3_Code/26Q1/canvas-labs"
+
+osascript <<'APPLESCRIPT'
+tell application "Terminal"
+    activate
+
+    do script "cd '/Users/taavi/Documents/Main_Docs/3_Code/26Q1/canvas-labs' && clear && printf '\\033[1;37m
+╔═══════════════════════════════════════════════════════════╗
+║   ██████╗ ██████╗ ██████╗ ███████╗██████╗                  ║
+║  ██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔══██╗                 ║
+║  ██║     ██║   ██║██║  ██║█████╗  ██████╔╝                 ║
+║  ██║     ██║   ██║██║  ██║██╔══╝  ██╔══██╗                 ║
+║  ╚██████╗╚██████╔╝██████╔╝███████╗██║  ██║                 ║
+║   ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝                 ║
+║                    Implementation Agent                     ║
+╠═══════════════════════════════════════════════════════════╣
+║  SCOPE                        COMMANDS                      ║
+║  ─────                        ────────                      ║
+║  Write code                   bun install                   ║
+║  Fix bugs                     bun test:plugin               ║
+║  Ship features                bun test:tui                  ║
+║                                                             ║
+║  INBOX: canvas-team/shared/messages/inbox/coder/            ║
+║  PLANS FROM: arch    REPORTS TO: PM                         ║
+╚═══════════════════════════════════════════════════════════╝
+\\033[0m\\n' && claude --dangerously-skip-permissions"
+
+    delay 1.0
+
+    tell front window
+        set bounds to {550, 45, 1100, 1000}
+        set background color to {4369, 4369, 4369}
+        set normal text color to {60000, 60000, 60000}
+        set cursor color to {65535, 65535, 65535}
+        set custom title to "Coder - Implementation Agent"
+        set title displays custom title to true
+    end tell
+end tell
+APPLESCRIPT

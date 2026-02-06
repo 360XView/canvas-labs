@@ -1,0 +1,161 @@
+# WPM Week in Review - Jan 26-31, 2026
+# Use with: bun run src/cli.ts present --file presentations/wpm-week-2026-01-31.yaml
+
+title: "Week in Review: Jan 26-31"
+type: interactive-presentation
+slides:
+  - id: slide-1-summary
+    title: "Week Summary"
+    content:
+      instructions: |
+        # Week in Review: Jan 26-31, 2026
+
+        **Activity:**
+        - 24 commits (canvas-team)
+        - 24 commits (canvas-labs)
+        - 30+ skills created
+        - 4 agents launched
+
+        **Key deliverables:**
+        - Agent ecosystem (WPM, EvalLead, PM, Architect)
+        - Interactive presentations with Tutor
+        - Telemetry system for VTA
+        - Evaluation roadmap
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "Let's review what we accomplished this week."
+        - id: 1
+          type: sentence
+          text: "We had 24 commits in canvas-team and 24 in canvas-labs."
+        - id: 2
+          type: sentence
+          text: "We created over 30 skills and launched 4 agents."
+
+  - id: slide-2-agents
+    title: "Agent Ecosystem"
+    content:
+      instructions: |
+        # The Agent Team
+
+        **WPM** - Work Process Manager
+        → Maintains repo health, enforces structure
+
+        **Architect** - Software Architecture
+        → Primary thinking partner, even for business ideas
+
+        **PM** - Product Manager
+        → Feature planning and roadmap
+
+        **EvalLead** - Evaluation Lead
+        → System-level testing and evaluation
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "We now have four specialized agents."
+        - id: 1
+          type: bullet
+          text: "WPM maintains repo health and structure"
+        - id: 2
+          type: bullet
+          text: "Architect is the primary thinking partner"
+        - id: 3
+          type: bullet
+          text: "PM handles feature planning"
+        - id: 4
+          type: bullet
+          text: "EvalLead runs system-level evaluation"
+
+  - id: slide-3-patterns
+    title: "Workflow Patterns"
+    content:
+      instructions: |
+        # Emerging Patterns
+
+        **Architect → Plan → Coder**
+        The most productive flow: think with Architect,
+        document the plan, hand to Coder for implementation.
+
+        **TUI as Universal Format**
+        Interactive presentations work for:
+        - Demos and tutorials
+        - Tool creation (log viewer)
+        - Team communication
+
+        **Skills as Capabilities**
+        Skills define what each agent can do.
+        Shared skills (in ~/.claude/skills/) work for all.
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "Several workflow patterns are emerging."
+        - id: 1
+          type: sentence
+          text: "Architect to Plan to Coder is the most productive flow."
+        - id: 2
+          type: sentence
+          text: "TUI format works for demos, tools, and communication."
+        - id: 3
+          type: sentence
+          text: "Skills define agent capabilities."
+
+  - id: slide-4-questions
+    title: "Open Questions"
+    content:
+      instructions: |
+        # Questions to Explore
+
+        **Agent Communication**
+        - Can Coder invoke EvalLead tools as sub-agent?
+        - How do agents discover each other's capabilities?
+        - Better handoff than copy-paste plans?
+
+        **Boundaries**
+        - Coder needs verification tools (unit tests)
+        - EvalLead is for system-level evals
+        - Where's the line?
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "Some questions emerged this week."
+        - id: 1
+          type: sentence
+          text: "How should agents communicate and discover each other?"
+        - id: 2
+          type: sentence
+          text: "Where's the boundary between Coder testing and EvalLead evaluation?"
+
+  - id: slide-5-next
+    title: "Coming Up"
+    content:
+      instructions: |
+        # Next Steps
+
+        1. **Daily reflections** - Don't skip, even quick ones
+        2. **Sub-agent exploration** - Can agents call each other?
+        3. **Plan sharing** - Better handoff mechanisms
+        4. **Business ideas** - Keep exploring with Architect
+
+        ---
+        *Generated from reflection: 2026-01-31*
+    narration:
+      segments:
+        - id: 0
+          type: sentence
+          text: "For next week, we have four priorities."
+        - id: 1
+          type: bullet
+          text: "Keep up with daily reflections"
+        - id: 2
+          type: bullet
+          text: "Explore sub-agent invocation"
+        - id: 3
+          type: bullet
+          text: "Improve plan sharing between agents"
+        - id: 4
+          type: bullet
+          text: "Continue business idea exploration"
