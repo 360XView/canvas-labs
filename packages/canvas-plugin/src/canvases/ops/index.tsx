@@ -1,18 +1,22 @@
-// Ops Monitor Canvas - Quick visual heartbeat for team operations
+// Ops Monitor Canvas - Shell component
+// Tab switching, keyboard dispatch, layout orchestration
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Text, useInput, useApp, useStdout } from "ink";
-import { readdirSync, readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join, resolve, dirname } from "path";
 import { fileURLToPath } from "url";
-import type {
-  OpsConfig,
-  InboxMessage,
-  InboxAgentSummary,
-  TicketInfo,
-  Column,
-} from "./types";
-import { OPS_COLORS, DEFAULT_AGENTS } from "./types";
+import type { OpsConfig, TabId, Column } from "./types";
+import { OPS_COLORS, TABS } from "./types";
+import { useOpsData } from "./hooks/use-ops-data";
+import { TabBar } from "./components/tab-bar";
+import { SummaryBar } from "./components/summary-bar";
+import { OperationsTab, buildInboxRows } from "./components/operations-tab";
+import { GitStatusTab } from "./components/git-status-tab";
+import { IdeasTab } from "./components/ideas-tab";
+import { ActionsTab } from "./components/actions-tab";
+import { SessionsTab } from "./components/sessions-tab";
+import { DetailView } from "./components/detail-view";
 
 interface Props {
   id: string;
@@ -21,148 +25,15 @@ interface Props {
   scenario?: string;
 }
 
-// Row model for inbox display: headers + messages + closing lines interleaved
-type InboxRow =
-  | { kind: "header"; agent: string; count: number }
-  | { kind: "message"; message: InboxMessage; flatIndex: number }
-  | { kind: "footer"; agent: string };
-
-function getDefaultTeamPath(): string {
-  const fromCwd = resolve(process.cwd(), "../../..", "canvas-team");
-  if (existsSync(fromCwd)) return fromCwd;
-  try {
-    const thisDir = dirname(fileURLToPath(import.meta.url));
-    return resolve(thisDir, "../../../../../..", "canvas-team");
-  } catch {
-    return fromCwd;
-  }
-}
-
-function extractYamlField(yaml: string, field: string): string | undefined {
-  const match = yaml.match(new RegExp(`^${field}:\\s*"?([^"\\n]*)"?`, "m"));
-  return match ? match[1].trim() : undefined;
-}
-
-function readInbox(inboxPath: string, agents: string[]): InboxAgentSummary[] {
-  return agents.map((agent) => {
-    const agentDir = join(inboxPath, agent);
-    if (!existsSync(agentDir)) {
-      return { agent, count: 0, messages: [] };
-    }
-    try {
-      const files = readdirSync(agentDir).filter(
-        (f) => f.endsWith(".md") && f !== "_archive"
-      );
-      const messages: InboxMessage[] = files.map((f) => {
-        try {
-          const content = readFileSync(join(agentDir, f), "utf-8");
-          const match = content.match(/^---\n([\s\S]*?)\n---/);
-          if (!match) return { agent, filename: f, from: "?", topic: f, type: "?", timestamp: "" };
-          const fm = match[1];
-          return {
-            agent,
-            filename: f,
-            from: extractYamlField(fm, "from") || "?",
-            topic: extractYamlField(fm, "topic") || f.replace(".md", ""),
-            type: extractYamlField(fm, "type") || "?",
-            timestamp: extractYamlField(fm, "timestamp") || "",
-            ticketId: extractYamlField(fm, "ticket_id"),
-          };
-        } catch {
-          return { agent, filename: f, from: "?", topic: f, type: "?", timestamp: "" };
-        }
-      });
-      messages.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-      return { agent, count: files.length, messages };
-    } catch {
-      return { agent, count: 0, messages: [] };
-    }
-  });
-}
-
-function readTickets(ticketsPath: string): TicketInfo[] {
-  if (!existsSync(ticketsPath)) return [];
-  try {
-    const files = readdirSync(ticketsPath).filter((f) => f.endsWith(".md"));
-    const tickets: TicketInfo[] = [];
-    for (const file of files) {
-      try {
-        const content = readFileSync(join(ticketsPath, file), "utf-8");
-        const match = content.match(/^---\n([\s\S]*?)\n---/);
-        if (!match) continue;
-        const frontmatter = match[1];
-        const status = extractYamlField(frontmatter, "status") || "unknown";
-        if (status !== "open") continue;
-        const id = extractYamlField(frontmatter, "id") || file.replace(".md", "");
-        const title = extractYamlField(frontmatter, "title") || id;
-        const assigned = extractYamlField(frontmatter, "assigned");
-        const body = content.slice(match[0].length).trim();
-        tickets.push({ id, title, status, assigned, body });
-      } catch { /* skip */ }
-    }
-    tickets.sort((a, b) => a.id.localeCompare(b.id));
-    return tickets;
-  } catch {
-    return [];
-  }
-}
-
-// Build grouped inbox rows: header per agent (only those with messages), then their messages
-function buildInboxRows(summaries: InboxAgentSummary[]): { rows: InboxRow[]; flatMessages: InboxMessage[] } {
-  const rows: InboxRow[] = [];
-  const flatMessages: InboxMessage[] = [];
-  for (const s of summaries) {
-    if (s.count === 0) continue;
-    rows.push({ kind: "header", agent: s.agent, count: s.count });
-    for (const m of s.messages) {
-      rows.push({ kind: "message", message: m, flatIndex: flatMessages.length });
-      flatMessages.push(m);
-    }
-    rows.push({ kind: "footer", agent: s.agent });
-  }
-  return { rows, flatMessages };
-}
-
-function truncate(s: string, maxLen: number): string {
-  if (maxLen <= 1) return "";
-  if (s.length <= maxLen) return s;
-  return s.slice(0, maxLen - 1) + "…";
-}
-
 export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Props) {
   const { exit } = useApp();
   const { stdout } = useStdout();
 
+  // Dimensions
   const [dimensions, setDimensions] = useState({
     width: stdout?.columns || 80,
     height: stdout?.rows || 24,
   });
-
-  const [inboxData, setInboxData] = useState<InboxAgentSummary[]>([]);
-  const [ticketData, setTicketData] = useState<TicketInfo[]>([]);
-  const [lastRefresh, setLastRefresh] = useState(new Date());
-
-  const [activeCol, setActiveCol] = useState<Column>("inbox");
-  const [inboxIdx, setInboxIdx] = useState(0); // Index into flatMessages
-  const [ticketIdx, setTicketIdx] = useState(0);
-  const [expanded, setExpanded] = useState(false);
-
-  const teamPath = getDefaultTeamPath();
-  const inboxPath = config?.inboxPath || join(teamPath, "shared/messages/inbox");
-  const ticketsPath = config?.ticketsPath || join(teamPath, "shared/tickets");
-  const agents = config?.agents || DEFAULT_AGENTS;
-
-  const refresh = useCallback(() => {
-    setInboxData(readInbox(inboxPath, agents));
-    setTicketData(readTickets(ticketsPath));
-    setLastRefresh(new Date());
-  }, [inboxPath, ticketsPath, agents]);
-
-  useEffect(() => { refresh(); }, [refresh]);
-  useEffect(() => {
-    const timer = setInterval(refresh, 30000);
-    return () => clearInterval(timer);
-  }, [refresh]);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -176,277 +47,415 @@ export function OpsCanvas({ id, config, socketPath, scenario = "monitor" }: Prop
     return () => { stdout?.off("resize", updateDimensions); };
   }, [stdout]);
 
-  const { rows: inboxRows, flatMessages } = buildInboxRows(inboxData);
-  const totalInbox = flatMessages.length;
+  // Data
+  const data = useOpsData(config);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabId>("operations");
+  const [selections, setSelections] = useState<Record<TabId, number>>({
+    operations: 0,
+    git: 0,
+    ideas: 0,
+    actions: 0,
+    sessions: 0,
+  });
+  const [expanded, setExpanded] = useState(false);
+  const [activeCol, setActiveCol] = useState<Column>("inbox");
+  const [inboxIdx, setInboxIdx] = useState(0);
+  const [ticketIdx, setTicketIdx] = useState(0);
+
+  // Helpers for selection bounds
+  const { flatMessages } = buildInboxRows(data.inboxData);
+
+  function getMaxIndex(tab: TabId): number {
+    switch (tab) {
+      case "git":
+        return Math.max(0, data.gitStatuses.length - 1);
+      case "ideas":
+        return Math.max(0, data.ideas.length - 1);
+      case "actions":
+        return Math.max(0, data.actions.length - 1);
+      case "sessions":
+        return Math.max(0, data.tmuxSessions.length - 1);
+      default:
+        return 0;
+    }
+  }
+
+  function updateSelection(tab: TabId, delta: number) {
+    if (tab === "operations") {
+      // Operations tab uses separate inbox/ticket indices
+      if (activeCol === "inbox") {
+        setInboxIdx((i) => Math.max(0, Math.min(flatMessages.length - 1, i + delta)));
+      } else {
+        setTicketIdx((i) => Math.max(0, Math.min(data.ticketData.length - 1, i + delta)));
+      }
+      return;
+    }
+    setSelections((prev) => {
+      const maxIdx = getMaxIndex(tab);
+      const next = Math.max(0, Math.min(maxIdx, prev[tab] + delta));
+      return { ...prev, [tab]: next };
+    });
+  }
+
+  // Keyboard
   useInput((input, key) => {
+    // Close expanded view or exit
     if (input === "q" || key.escape) {
-      if (expanded) { setExpanded(false); return; }
+      if (expanded) {
+        setExpanded(false);
+        return;
+      }
       exit();
-    } else if (input === "r") {
-      refresh();
-    } else if (key.tab) {
-      setActiveCol((c) => (c === "inbox" ? "tickets" : "inbox"));
+      return;
+    }
+
+    // Refresh
+    if (input === "r") {
+      data.refresh();
+      return;
+    }
+
+    // Tab switching by number
+    const tabByKey = TABS.find((t) => t.key === input);
+    if (tabByKey && !expanded) {
+      setActiveTab(tabByKey.id);
       setExpanded(false);
-    } else if (key.upArrow) {
-      if (activeCol === "inbox") {
-        setInboxIdx((i) => Math.max(0, i - 1));
-      } else {
-        setTicketIdx((i) => Math.max(0, i - 1));
+      return;
+    }
+
+    // Tab cycling
+    if (key.tab && !expanded) {
+      const currentIdx = TABS.findIndex((t) => t.id === activeTab);
+      if (activeTab === "operations") {
+        // Within operations tab, Tab switches columns first
+        if (activeCol === "inbox") {
+          setActiveCol("tickets");
+          return;
+        }
+        // If already on tickets column, cycle to next tab
+        setActiveCol("inbox");
       }
-    } else if (key.downArrow) {
-      if (activeCol === "inbox") {
-        setInboxIdx((i) => Math.min(flatMessages.length - 1, i + 1));
-      } else {
-        setTicketIdx((i) => Math.min(ticketData.length - 1, i + 1));
+      const nextIdx = (currentIdx + 1) % TABS.length;
+      setActiveTab(TABS[nextIdx].id);
+      return;
+    }
+
+    // Navigation
+    if (key.upArrow) {
+      updateSelection(activeTab, -1);
+      return;
+    }
+    if (key.downArrow) {
+      updateSelection(activeTab, 1);
+      return;
+    }
+
+    // Left/Right for operations tab column switching
+    if (activeTab === "operations" && !expanded) {
+      if (key.leftArrow) {
+        setActiveCol("inbox");
+        return;
       }
-    } else if (key.return) {
+      if (key.rightArrow) {
+        setActiveCol("tickets");
+        return;
+      }
+    }
+
+    // Enter: toggle expanded
+    if (key.return) {
       setExpanded((e) => !e);
+      return;
     }
   });
 
   const termWidth = dimensions.width;
   const termHeight = dimensions.height;
+  const innerWidth = termWidth - 2; // paddingX={1}
 
-  // Expanded view
+  // ── Expanded view ─────────────────────────────────────────────────
+
   if (expanded) {
-    const item = activeCol === "inbox" ? flatMessages[inboxIdx] : ticketData[ticketIdx];
-    if (!item) { setExpanded(false); return null; }
-
-    let title: string;
-    let content: string;
-
-    if (activeCol === "inbox") {
-      const msg = item as InboxMessage;
-      title = `${msg.from} → ${msg.agent}: ${msg.topic}`;
-      try {
-        const filePath = join(inboxPath, msg.agent, msg.filename);
-        const raw = readFileSync(filePath, "utf-8");
-        const bodyMatch = raw.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)/);
-        content = bodyMatch ? bodyMatch[1].trim() : raw;
-      } catch {
-        content = "(Could not read message)";
-      }
-    } else {
-      const ticket = item as TicketInfo;
-      title = `${ticket.id}: ${ticket.title}`;
-      content = ticket.body || "(No description)";
+    const detail = getDetailForTab(activeTab, selections, activeCol, inboxIdx, ticketIdx, data, config);
+    if (!detail) {
+      setExpanded(false);
+      return null;
     }
-
-    const headerLines = 4;
-    const footerLines = 2;
-    const contentWidth = Math.min(termWidth - 4, 80);
-    const viewportHeight = termHeight - headerLines - footerLines;
-    const contentLines = content.split("\n");
-    const visibleLines = contentLines.slice(0, viewportHeight);
-
     return (
-      <Box flexDirection="column" width={termWidth} height={termHeight} paddingX={1}>
-        <Box marginBottom={1}>
-          <Text bold color={OPS_COLORS.header}>
-            {activeCol === "inbox" ? "MESSAGE" : "TICKET"}
-          </Text>
-        </Box>
-        <Box marginBottom={1}>
-          <Text bold color={OPS_COLORS.text}>
-            {truncate(title, contentWidth)}
-          </Text>
-        </Box>
-        <Box flexDirection="column" flexGrow={1}>
-          {visibleLines.map((line, i) => (
-            <Text key={`line-${i}`} color={OPS_COLORS.text}>
-              {truncate(line, contentWidth)}
-            </Text>
-          ))}
-          {contentLines.length > viewportHeight && (
-            <Text color={OPS_COLORS.dim}>
-              ... {contentLines.length - viewportHeight} more lines
-            </Text>
-          )}
-        </Box>
-        <Box>
-          <Text color={OPS_COLORS.dim}>
-            Enter/Esc close • q quit
-          </Text>
-        </Box>
-      </Box>
+      <DetailView
+        title={detail.title}
+        category={detail.category}
+        content={detail.content}
+        termWidth={termWidth}
+        termHeight={termHeight}
+      />
     );
   }
 
-  // Dashboard view — account for paddingX={1} (2 chars total)
-  const innerWidth = termWidth - 2;
-  const leftWidth = Math.max(30, Math.floor(innerWidth * 0.45));
-  const rightWidth = innerWidth - leftWidth - 3;
+  // ── Dashboard view ────────────────────────────────────────────────
 
-  const timeStr = lastRefresh.toLocaleTimeString("en-US", {
+  const timeStr = data.lastRefresh.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
 
-  const headerRows = 4;
-  const footerRows = 2;
-  const contentRows = Math.max(1, termHeight - headerRows - footerRows);
+  // Layout math: header(1) + gap(1) + tabbar(1) + summarybar(1) + content(flex) + footer(1)
+  const chromeRows = 5;
+  const contentRows = Math.max(1, termHeight - chromeRows);
 
-  // Render inbox rows (headers + messages)
-  const inboxElements: JSX.Element[] = [];
-  let rowCount = 0;
-  for (const row of inboxRows) {
-    if (rowCount >= contentRows) break;
-    if (row.kind === "header") {
-      const prefix = "── ";
-      const countStr = ` (${row.count}) `;
-      const usedWidth = prefix.length + row.agent.length + countStr.length;
-      const lineChars = Math.max(0, leftWidth - usedWidth);
-      inboxElements.push(
-        <Box key={`hdr-${row.agent}`}>
-          <Text color={OPS_COLORS.accent} bold>
-            {"── "}
-          </Text>
-          <Text color={OPS_COLORS.accent} bold>
-            {row.agent}
-          </Text>
-          <Text color={OPS_COLORS.dim}>
-            {` (${row.count}) `}
-          </Text>
-          <Text color={OPS_COLORS.accent}>
-            {"─".repeat(lineChars)}
-          </Text>
-        </Box>
-      );
-    } else if (row.kind === "message") {
-      const msg = row.message;
-      const isSelected = activeCol === "inbox" && row.flatIndex === inboxIdx;
-      const fromWidth = 4; // "wpm "
-      const topicWidth = leftWidth - fromWidth - 3; // cursor + from + space
-      inboxElements.push(
-        <Box key={`msg-${row.flatIndex}`}>
-          <Text color={isSelected ? OPS_COLORS.selected : OPS_COLORS.dim}>
-            {isSelected ? "▸" : " "}
-          </Text>
-          <Text color={OPS_COLORS.warning}>
-            {msg.from.padEnd(fromWidth)}
-          </Text>
-          <Text color={isSelected ? OPS_COLORS.text : OPS_COLORS.dim}>
-            {truncate(msg.topic, topicWidth)}
-          </Text>
-        </Box>
-      );
-    } else if (row.kind === "footer") {
-      inboxElements.push(
-        <Box key={`ftr-${row.agent}`}>
-          <Text color={OPS_COLORS.dim}>
-            {"─".repeat(leftWidth)}
-          </Text>
-        </Box>
-      );
-    }
-    rowCount++;
-  }
-
-  if (totalInbox === 0) {
-    inboxElements.push(
-      <Text key="empty" color={OPS_COLORS.dim}>No messages</Text>
-    );
-  }
+  // Footer context
+  const footerText = getFooterText(activeTab, selections, activeCol, inboxIdx, ticketIdx, data);
 
   return (
     <Box flexDirection="column" width={termWidth} height={termHeight} paddingX={1}>
       {/* Header */}
-      <Box justifyContent="space-between" marginBottom={1}>
+      <Box justifyContent="space-between">
         <Text bold color={OPS_COLORS.header}>
           {config?.title || "OPS MONITOR"}
         </Text>
         <Text color={OPS_COLORS.dim}>
-          {timeStr} • Tab ↑↓ Enter • r refresh • q quit
+          {timeStr} {"\u2022"} 1-5 tabs {"\u2022"} {"\u2191\u2193"} nav {"\u2022"} Enter expand {"\u2022"} r refresh {"\u2022"} q quit
         </Text>
       </Box>
 
-      {/* Column headers */}
-      <Box>
-        <Box width={leftWidth}>
-          <Text bold color={activeCol === "inbox" ? OPS_COLORS.primary : OPS_COLORS.dim}>
-            INBOX
-          </Text>
-          <Text color={OPS_COLORS.dim}> ({totalInbox})</Text>
-        </Box>
-        <Box width={3}>
-          <Text color={OPS_COLORS.dim}> │ </Text>
-        </Box>
-        <Box width={rightWidth}>
-          <Text bold color={activeCol === "tickets" ? OPS_COLORS.primary : OPS_COLORS.dim}>
-            TICKETS
-          </Text>
-          <Text color={OPS_COLORS.dim}> ({ticketData.length} open)</Text>
-        </Box>
+      {/* Tab bar + Summary bar */}
+      <Box justifyContent="space-between">
+        <TabBar activeTab={activeTab} />
+        <SummaryBar counts={data.counts} />
       </Box>
 
-      {/* Divider line */}
-      <Box>
-        <Text color={OPS_COLORS.dim}>
-          {"─".repeat(leftWidth)}{"─┼─"}{"─".repeat(rightWidth)}
-        </Text>
-      </Box>
-
-      {/* Content rows */}
-      <Box flexGrow={1}>
-        {/* Left column - Inbox grouped by agent */}
-        <Box flexDirection="column" width={leftWidth}>
-          {inboxElements}
-        </Box>
-
-        {/* Divider */}
-        <Box flexDirection="column" width={3}>
-          {Array.from({ length: contentRows }).map((_, i) => (
-            <Text key={`div-${i}`} color={OPS_COLORS.dim}> │ </Text>
-          ))}
-        </Box>
-
-        {/* Right column - Open tickets */}
-        <Box flexDirection="column" width={rightWidth}>
-          {ticketData.length === 0 ? (
-            <Text color={OPS_COLORS.dim}>No open tickets</Text>
-          ) : (
-            ticketData.slice(0, contentRows).map((ticket, i) => {
-              const isSelected = activeCol === "tickets" && i === ticketIdx;
-              const idWidth = 9;
-              const assignedWidth = ticket.assigned ? ticket.assigned.length + 3 : 0;
-              const titleWidth = rightWidth - idWidth - assignedWidth - 2;
-              return (
-                <Box key={ticket.id}>
-                  <Text color={isSelected ? OPS_COLORS.selected : OPS_COLORS.dim}>
-                    {isSelected ? "▸" : " "}
-                  </Text>
-                  <Text color={OPS_COLORS.success} bold>
-                    {ticket.id.padEnd(idWidth)}
-                  </Text>
-                  <Text color={isSelected ? OPS_COLORS.text : OPS_COLORS.dim}>
-                    {truncate(ticket.title, titleWidth)}
-                  </Text>
-                  {ticket.assigned && (
-                    <Text color={OPS_COLORS.dim}>
-                      {` (${ticket.assigned})`}
-                    </Text>
-                  )}
-                </Box>
-              );
-            })
-          )}
-        </Box>
+      {/* Active tab content */}
+      <Box flexGrow={1} flexDirection="column">
+        {activeTab === "operations" && (
+          <OperationsTab
+            inboxData={data.inboxData}
+            ticketData={data.ticketData}
+            activeCol={activeCol}
+            inboxIdx={inboxIdx}
+            ticketIdx={ticketIdx}
+            innerWidth={innerWidth}
+            contentRows={contentRows}
+          />
+        )}
+        {activeTab === "git" && (
+          <GitStatusTab
+            statuses={data.gitStatuses}
+            selectedIdx={selections.git}
+            expanded={false}
+            innerWidth={innerWidth}
+          />
+        )}
+        {activeTab === "ideas" && (
+          <IdeasTab
+            ideas={data.ideas}
+            selectedIdx={selections.ideas}
+            innerWidth={innerWidth}
+            contentRows={contentRows}
+          />
+        )}
+        {activeTab === "actions" && (
+          <ActionsTab
+            actions={data.actions}
+            selectedIdx={selections.actions}
+            innerWidth={innerWidth}
+            contentRows={contentRows}
+          />
+        )}
+        {activeTab === "sessions" && (
+          <SessionsTab
+            sessions={data.tmuxSessions}
+            selectedIdx={selections.sessions}
+            expanded={false}
+            innerWidth={innerWidth}
+            contentRows={contentRows}
+          />
+        )}
       </Box>
 
       {/* Footer */}
       <Box>
         <Text color={OPS_COLORS.dim}>
-          {activeCol === "inbox" && flatMessages.length > 0
-            ? `→ ${flatMessages[inboxIdx]?.agent || ""} inbox • from ${flatMessages[inboxIdx]?.from || ""}`
-            : activeCol === "tickets" && ticketData.length > 0
-              ? `→ ${ticketData[ticketIdx]?.assigned || "unassigned"}`
-              : ""}
+          {footerText}
         </Text>
       </Box>
     </Box>
   );
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────
+
+function getDetailForTab(
+  tab: TabId,
+  selections: Record<TabId, number>,
+  activeCol: Column,
+  inboxIdx: number,
+  ticketIdx: number,
+  data: ReturnType<typeof useOpsData>,
+  config?: OpsConfig,
+): { title: string; category: string; content: string } | null {
+  const { flatMessages } = buildInboxRows(data.inboxData);
+
+  switch (tab) {
+    case "operations": {
+      if (activeCol === "inbox") {
+        const msg = flatMessages[inboxIdx];
+        if (!msg) return null;
+        const teamPath = getTeamPathFromConfig(config);
+        const inboxPath = config?.inboxPath || join(teamPath, "shared/messages/inbox");
+        let content: string;
+        try {
+          const filePath = join(inboxPath, msg.agent, msg.filename);
+          const raw = readFileSync(filePath, "utf-8");
+          const bodyMatch = raw.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)/);
+          content = bodyMatch ? bodyMatch[1].trim() : raw;
+        } catch {
+          content = "(Could not read message)";
+        }
+        return {
+          title: `${msg.from} \u2192 ${msg.agent}: ${msg.topic}`,
+          category: "MESSAGE",
+          content,
+        };
+      } else {
+        const ticket = data.ticketData[ticketIdx];
+        if (!ticket) return null;
+        return {
+          title: `${ticket.id}: ${ticket.title}`,
+          category: "TICKET",
+          content: ticket.body || "(No description)",
+        };
+      }
+    }
+    case "git": {
+      const repo = data.gitStatuses[selections.git];
+      if (!repo) return null;
+      const lines = [
+        `Branch: ${repo.branch}`,
+        `Status: ${repo.dirty ? `${repo.dirtyFiles.length} dirty files` : "clean"}`,
+        `Remote: ${repo.hasRemote ? `ahead ${repo.ahead}, behind ${repo.behind}` : "no remote"}`,
+        `Last commit: ${repo.lastCommit} (${repo.lastCommitAge})`,
+        "",
+      ];
+      if (repo.dirty) {
+        lines.push("Dirty files:", ...repo.dirtyFiles.map((f) => `  ${f}`));
+      }
+      return {
+        title: repo.name,
+        category: "GIT REPO",
+        content: lines.join("\n"),
+      };
+    }
+    case "ideas": {
+      const idea = data.ideas[selections.ideas];
+      if (!idea) return null;
+      const header = [
+        `Agent: ${idea.agent}`,
+        idea.source ? `Source: ${idea.source}` : "",
+        idea.captured ? `Captured: ${idea.captured}` : "",
+        idea.tags.length ? `Tags: ${idea.tags.join(", ")}` : "",
+        `Status: ${idea.status}`,
+        "",
+      ].filter(Boolean).join("\n");
+      return {
+        title: idea.title,
+        category: "IDEA",
+        content: header + idea.body,
+      };
+    }
+    case "actions": {
+      const action = data.actions[selections.actions];
+      if (!action) return null;
+      const header = [
+        `Agent: ${action.agent}`,
+        `Status: ${action.status}`,
+        `Priority: ${action.priority}`,
+        action.source ? `Source: ${action.source}` : "",
+        action.created ? `Created: ${action.created}` : "",
+        "",
+      ].filter(Boolean).join("\n");
+      return {
+        title: action.title,
+        category: "ACTION",
+        content: header + action.body,
+      };
+    }
+    case "sessions": {
+      const session = data.tmuxSessions[selections.sessions];
+      if (!session) return null;
+      const lines = [
+        `Windows: ${session.windows}`,
+        `Attached: ${session.attached ? "yes" : "no"}`,
+        "",
+        "Panes:",
+        ...session.panes.map(
+          (p) => `  ${p.windowName}:${p.paneIndex}  ${p.currentCommand}  ${p.currentPath}`
+        ),
+      ];
+      return {
+        title: session.name,
+        category: "TMUX SESSION",
+        content: lines.join("\n"),
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+function getFooterText(
+  tab: TabId,
+  selections: Record<TabId, number>,
+  activeCol: Column,
+  inboxIdx: number,
+  ticketIdx: number,
+  data: ReturnType<typeof useOpsData>,
+): string {
+  const { flatMessages } = buildInboxRows(data.inboxData);
+
+  switch (tab) {
+    case "operations":
+      if (activeCol === "inbox" && flatMessages.length > 0) {
+        const msg = flatMessages[inboxIdx];
+        return msg ? `\u2192 ${msg.agent} inbox \u2022 from ${msg.from}` : "";
+      }
+      if (activeCol === "tickets" && data.ticketData.length > 0) {
+        const ticket = data.ticketData[ticketIdx];
+        return ticket ? `\u2192 ${ticket.assigned || "unassigned"}` : "";
+      }
+      return "";
+    case "git": {
+      const repo = data.gitStatuses[selections.git];
+      return repo ? `\u2192 ${repo.name} \u2022 ${repo.branch}` : "";
+    }
+    case "ideas": {
+      const idea = data.ideas[selections.ideas];
+      return idea ? `\u2192 ${idea.agent} \u2022 ${idea.status}${idea.tags.length ? " \u2022 " + idea.tags.join(", ") : ""}` : "";
+    }
+    case "actions": {
+      const action = data.actions[selections.actions];
+      return action ? `\u2192 ${action.agent} \u2022 ${action.status} \u2022 ${action.priority}` : "";
+    }
+    case "sessions": {
+      const session = data.tmuxSessions[selections.sessions];
+      return session ? `\u2192 ${session.name} \u2022 ${session.windows} windows${session.attached ? " \u2022 attached" : ""}` : "";
+    }
+    default:
+      return "";
+  }
+}
+
+function getTeamPathFromConfig(config?: OpsConfig): string {
+  const fromCwd = resolve(process.cwd(), "../../..", "canvas-team");
+  if (existsSync(fromCwd)) return fromCwd;
+  try {
+    const thisDir = dirname(fileURLToPath(import.meta.url));
+    return resolve(thisDir, "../../../../../..", "canvas-team");
+  } catch {
+    return fromCwd;
+  }
 }
 
 export type { OpsConfig } from "./types";
