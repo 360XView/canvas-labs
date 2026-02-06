@@ -8,6 +8,7 @@ import type { FlightConfig } from "./flight/types";
 import { VTACanvas, type VTAConfig } from "./vta";
 import { LabLauncherCanvas, type LabLauncherConfig } from "./lab-launcher";
 import { VTAPreviewCanvas, type VTAPreviewConfig } from "./vta-preview";
+import { OpsCanvas, type OpsConfig } from "./ops";
 
 // Clear screen and hide cursor
 function clearScreen() {
@@ -76,6 +77,12 @@ export async function renderCanvas(
       return renderVTAPreview(
         id,
         config as VTAPreviewConfig | undefined,
+        options
+      );
+    case "ops":
+      return renderOps(
+        id,
+        config as OpsConfig | undefined,
         options
       );
     default:
@@ -191,6 +198,25 @@ async function renderVTAPreview(
       config={config}
       socketPath={options?.socketPath}
       scenario={options?.scenario || "preview"}
+    />,
+    {
+      exitOnCtrlC: true,
+    }
+  );
+  await waitUntilExit();
+}
+
+async function renderOps(
+  id: string,
+  config?: OpsConfig,
+  options?: RenderOptions
+): Promise<void> {
+  const { waitUntilExit } = render(
+    <OpsCanvas
+      id={id}
+      config={config}
+      socketPath={options?.socketPath}
+      scenario={options?.scenario || "monitor"}
     />,
     {
       exitOnCtrlC: true,
