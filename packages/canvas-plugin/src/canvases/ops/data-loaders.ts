@@ -267,12 +267,14 @@ export function readIdeas(teamPath: string, agents: string[]): IdeaItem[] {
             });
             continue;
           }
+          const status = extractYamlField(parsed.frontmatter, "status") || "open";
+          if (status === "done" || status === "closed" || status === "superseded") continue;
           ideas.push({
             title: extractYamlField(parsed.frontmatter, "title") || file.replace(".md", ""),
             agent,
             source: extractYamlField(parsed.frontmatter, "source") || "",
             captured: extractYamlField(parsed.frontmatter, "captured") || "",
-            status: extractYamlField(parsed.frontmatter, "status") || "unknown",
+            status,
             tags: extractYamlList(parsed.frontmatter, "tags"),
             body: parsed.body,
             filename: file,
