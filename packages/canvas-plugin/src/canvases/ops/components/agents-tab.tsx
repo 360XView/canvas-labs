@@ -84,7 +84,7 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
       {/* Column headers */}
       <Box>
         <Text color={OPS_COLORS.header}>
-          {"  Agent     Reflected  Cmts Dirty Unpsh Inbox Sent  Mem  Status"}
+          {"  Agent     Reflected  Cmts Dirty Unpsh Inbox Sent  MemTot Mem24h Status"}
         </Text>
       </Box>
       <Text color={OPS_COLORS.dim}>{divider}</Text>
@@ -103,12 +103,14 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
         const unpsh = `${row.unpushedCommits}`.padEnd(6);
         const inbox = (row.agent === "shared" ? "-" : `${row.inboxCount}`).padEnd(6);
         const sent = (row.agent === "shared" ? "-" : `${row.sentCount}`).padEnd(6);
-        const mem = row.hasMemory ? `${row.memoryEntries}`.padEnd(5) : "-".padEnd(5);
+        const memTot = row.hasMemory ? `${row.memoryTotal}`.padEnd(7) : "-".padEnd(7);
+        const mem24h = row.hasMemory ? `${row.memory24h}`.padEnd(7) : "-".padEnd(7);
 
         // Color dirty/unpushed if non-zero
         const dirtyColor = row.dirtyFiles > 0 ? OPS_COLORS.warning : (isSelected ? OPS_COLORS.selected : OPS_COLORS.text);
         const unpshColor = row.unpushedCommits > 0 ? OPS_COLORS.accent : (isSelected ? OPS_COLORS.selected : OPS_COLORS.text);
-        const memColor = row.hasMemory && row.memoryEntries > 0 ? OPS_COLORS.success : (isSelected ? OPS_COLORS.selected : OPS_COLORS.dim);
+        const memTotColor = row.hasMemory && row.memoryTotal > 0 ? OPS_COLORS.success : (isSelected ? OPS_COLORS.selected : OPS_COLORS.dim);
+        const mem24hColor = row.hasMemory && row.memory24h > 0 ? OPS_COLORS.success : (isSelected ? OPS_COLORS.selected : OPS_COLORS.dim);
         const baseColor = isSelected ? OPS_COLORS.selected : OPS_COLORS.text;
 
         return (
@@ -117,7 +119,8 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
             <Text color={dirtyColor} bold={isSelected}>{dirty}</Text>
             <Text color={unpshColor} bold={isSelected}>{unpsh}</Text>
             <Text color={baseColor} bold={isSelected}>{inbox}{sent}</Text>
-            <Text color={memColor}>{mem}</Text>
+            <Text color={memTotColor}>{memTot}</Text>
+            <Text color={mem24hColor}>{mem24h}</Text>
             <Text color={row.statusColor} bold={row.isNew}>{row.statusLabel}</Text>
           </Box>
         );
@@ -135,7 +138,7 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
           </Text>
           {rows[selectedIdx].hasMemory && (
             <Text color={OPS_COLORS.dim}>
-              Memory: {rows[selectedIdx].memoryEntries} entries in last 3 days
+              Memory: {rows[selectedIdx].memoryTotal} total log files, {rows[selectedIdx].memory24h} updated in last 24h
             </Text>
           )}
         </Box>

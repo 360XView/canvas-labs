@@ -1,7 +1,7 @@
 // Ops Monitor - Pure data loading functions (no React dependency)
 // Used by both the TUI canvas (via hook) and the CLI (ops-data command)
 
-import { readdirSync, readFileSync, existsSync } from "fs";
+import { readdirSync, readFileSync, existsSync, statSync } from "fs";
 import { join, resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
@@ -367,6 +367,8 @@ function readAgentActivity(teamPath: string, agent: string, sinceDate: string): 
     sentCount: 0,
     filesChanged: 0,
     memoryEntries: 0,
+    memoryTotal: 0,
+    memory24h: 0,
     hasMemory: false,
   };
 
@@ -477,30 +479,27 @@ function readAgentActivity(teamPath: string, agent: string, sinceDate: string): 
     }
   }
 
-  // Memory system check and log entries (last 3 days)
+  // Memory system check and log counts
   const memoryToolsDir = join(teamPath, agent, "tools", "memory");
   result.hasMemory = existsSync(memoryToolsDir);
   if (result.hasMemory) {
     const logsDir = join(teamPath, agent, "memory", "logs");
     if (existsSync(logsDir)) {
       try {
-        const now = new Date();
-        let entries = 0;
-        for (let d = 0; d < 3; d++) {
-          const date = new Date(now);
-          date.setDate(date.getDate() - d);
-          const dateStr = date.toISOString().slice(0, 10);
-          const logFile = join(logsDir, `${dateStr}.md`);
-          if (existsSync(logFile)) {
-            try {
-              const content = readFileSync(logFile, "utf-8");
-              // Count lines starting with "- " (log entries)
-              const lines = content.split("\n").filter((l) => /^- \d{2}:\d{2}/.test(l));
-              entries += lines.length;
-            } catch { /* skip */ }
-          }
+        const logFiles = readdirSync(logsDir).filter((f) => f.endsWith(".md"));
+        result.memoryTotal = logFiles.length;
+
+        const now = Date.now();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        let recent = 0;
+        for (const file of logFiles) {
+          try {
+            const stat = statSync(join(logsDir, file));
+            if (now - stat.mtimeMs < oneDayMs) recent++;
+          } catch { /* skip */ }
         }
-        result.memoryEntries = entries;
+        result.memory24h = recent;
+        result.memoryEntries = recent; // legacy compat
       } catch { /* skip */ }
     }
   }
