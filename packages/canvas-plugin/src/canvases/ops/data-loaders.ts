@@ -479,27 +479,31 @@ function readAgentActivity(teamPath: string, agent: string, sinceDate: string): 
     }
   }
 
-  // Memory system check and log counts
+  // Memory system check and log entry counts
   const memoryToolsDir = join(teamPath, agent, "tools", "memory");
   result.hasMemory = existsSync(memoryToolsDir);
   if (result.hasMemory) {
     const logsDir = join(teamPath, agent, "memory", "logs");
     if (existsSync(logsDir)) {
       try {
+        const entryPattern = /^- \d{2}:\d{2}/;
         const logFiles = readdirSync(logsDir).filter((f) => f.endsWith(".md"));
-        result.memoryTotal = logFiles.length;
-
         const now = Date.now();
         const oneDayMs = 24 * 60 * 60 * 1000;
-        let recent = 0;
+        let totalEntries = 0;
+        let recentEntries = 0;
         for (const file of logFiles) {
           try {
+            const content = readFileSync(join(logsDir, file), "utf-8");
+            const entries = content.split("\n").filter((l) => entryPattern.test(l)).length;
+            totalEntries += entries;
             const stat = statSync(join(logsDir, file));
-            if (now - stat.mtimeMs < oneDayMs) recent++;
+            if (now - stat.mtimeMs < oneDayMs) recentEntries += entries;
           } catch { /* skip */ }
         }
-        result.memory24h = recent;
-        result.memoryEntries = recent; // legacy compat
+        result.memoryTotal = totalEntries;
+        result.memory24h = recentEntries;
+        result.memoryEntries = recentEntries; // legacy compat
       } catch { /* skip */ }
     }
   }

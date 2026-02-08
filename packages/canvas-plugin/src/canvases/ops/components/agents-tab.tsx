@@ -138,7 +138,7 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
           </Text>
           {rows[selectedIdx].hasMemory && (
             <Text color={OPS_COLORS.dim}>
-              Memory: {rows[selectedIdx].memoryTotal} total log files, {rows[selectedIdx].memory24h} updated in last 24h
+              Memory: {rows[selectedIdx].memoryTotal} total entries, {rows[selectedIdx].memory24h} in last 24h
             </Text>
           )}
         </Box>

@@ -128,8 +128,8 @@ export interface AgentActivity {
   sentCount: number;      // messages sent since last review
   filesChanged: number;   // files changed since last review
   memoryEntries: number;  // memory log entries in last 3 days (legacy, kept for compat)
-  memoryTotal: number;    // total memory log files
-  memory24h: number;      // memory log files updated in last 24 hours
+  memoryTotal: number;    // total memory log entries across all files
+  memory24h: number;      // memory log entries in files updated in last 24 hours
   hasMemory: boolean;     // agent has memory system installed
 }
 
