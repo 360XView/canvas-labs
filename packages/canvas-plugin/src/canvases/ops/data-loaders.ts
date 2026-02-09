@@ -3,7 +3,6 @@
 
 import { readdirSync, readFileSync, existsSync, statSync } from "fs";
 import { join, resolve, dirname } from "path";
-import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import type {
   OpsConfig,
@@ -24,14 +23,31 @@ import { DEFAULT_AGENTS } from "./types";
 // ── Path resolution ──────────────────────────────────────────────────
 
 export function getDefaultTeamPath(): string {
-  const fromCwd = resolve(process.cwd(), "../../..", "canvas-team");
-  if (existsSync(fromCwd)) return fromCwd;
+  // Strategy 1: Find canvas-team as sibling of the git repo root
   try {
-    const thisDir = dirname(fileURLToPath(import.meta.url));
-    return resolve(thisDir, "../../../../../../..", "canvas-team");
-  } catch {
-    return fromCwd;
+    const result = Bun.spawnSync(["git", "rev-parse", "--show-toplevel"], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    if (result.exitCode === 0) {
+      const repoRoot = new TextDecoder().decode(result.stdout).trim();
+      const sibling = resolve(repoRoot, "..", "canvas-team");
+      if (existsSync(sibling)) return sibling;
+    }
+  } catch { /* fall through */ }
+
+  // Strategy 2: Walk up from cwd looking for a parent containing canvas-team/
+  let dir = process.cwd();
+  for (let i = 0; i < 6; i++) {
+    const candidate = join(dir, "canvas-team");
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
   }
+
+  // Strategy 3: Original relative fallback
+  return resolve(process.cwd(), "../../..", "canvas-team");
 }
 
 // ── Frontmatter parsing ─────────────────────────────────────────────
