@@ -17,6 +17,7 @@ import type {
   SummaryCounts,
   ReviewStatus,
   AgentActivity,
+  ActiveAgentSession,
 } from "./types";
 import { DEFAULT_AGENTS } from "./types";
 
@@ -226,21 +227,22 @@ export function readTmuxSessions(): TmuxSession[] {
   let panesRaw = "";
   try {
     panesRaw = execSync(
-      'tmux list-panes -a -F "#{session_name}:#{window_index}:#{window_name}:#{pane_index}:#{pane_current_command}:#{pane_current_path}"',
+      'tmux list-panes -a -F "#{session_name}\t#{window_index}\t#{window_name}\t#{pane_index}\t#{pane_current_command}\t#{pane_current_path}\t#{pane_title}"',
       { encoding: "utf-8", timeout: 5000 }
     ).trim();
   } catch { /* no panes info */ }
 
   const panes: TmuxPane[] = panesRaw
     ? panesRaw.split("\n").filter(Boolean).map((line) => {
-        const parts = line.split(":");
+        const parts = line.split("\t");
         return {
           sessionName: parts[0] || "",
           windowIndex: parseInt(parts[1] || "0", 10),
           windowName: parts[2] || "",
           paneIndex: parseInt(parts[3] || "0", 10),
           currentCommand: parts[4] || "",
-          currentPath: parts.slice(5).join(":") || "",
+          currentPath: parts[5] || "",
+          paneTitle: parts[6] || "",
         };
       })
     : [];
@@ -255,6 +257,71 @@ export function readTmuxSessions(): TmuxSession[] {
       panes: panes.filter((p) => p.sessionName === name),
     };
   });
+}
+
+// ── Active agent detection ──────────────────────────────────────────
+
+export function detectActiveAgentSessions(
+  tmuxSessions: TmuxSession[],
+  knownAgents: string[]
+): Map<string, ActiveAgentSession[]> {
+  const result = new Map<string, ActiveAgentSession[]>();
+
+  for (const session of tmuxSessions) {
+    for (const pane of session.panes) {
+      if (pane.currentCommand !== "claude") continue;
+
+      let agent: string | undefined;
+      let ticket: string | undefined;
+
+      // Try pane title first (format: "AGENT · TICKET · STAGE · WORKTREE")
+      if (pane.paneTitle) {
+        const titleParts = pane.paneTitle.split(" \u00B7 ");
+        if (titleParts.length >= 1) {
+          const titleAgent = titleParts[0].trim().toLowerCase();
+          if (knownAgents.includes(titleAgent)) {
+            agent = titleAgent;
+          }
+        }
+        if (titleParts.length >= 2 && titleParts[1].trim()) {
+          ticket = titleParts[1].trim();
+        }
+      }
+
+      // Fallback: extract agent from working directory
+      if (!agent) {
+        const pathMatch = pane.currentPath.match(/canvas-team\/([^/]+)/);
+        if (pathMatch && knownAgents.includes(pathMatch[1])) {
+          agent = pathMatch[1];
+        }
+      }
+
+      if (!agent) continue;
+
+      const sessions = result.get(agent) || [];
+      sessions.push({
+        ticket: ticket || undefined,
+        paneTitle: pane.paneTitle || undefined,
+        path: pane.currentPath || undefined,
+      });
+      result.set(agent, sessions);
+    }
+  }
+
+  return result;
+}
+
+export function enrichWithActiveSessions(
+  agentActivity: AgentActivity[],
+  tmuxSessions: TmuxSession[]
+): void {
+  const activeMap = detectActiveAgentSessions(
+    tmuxSessions,
+    agentActivity.map((a) => a.agent)
+  );
+  for (const act of agentActivity) {
+    act.activeSessions = activeMap.get(act.agent) || [];
+  }
 }
 
 // ── Ideas loading ───────────────────────────────────────────────────
@@ -386,6 +453,7 @@ function readAgentActivity(teamPath: string, agent: string, sinceDate: string): 
     memoryTotal: 0,
     memory24h: 0,
     hasMemory: false,
+    activeSessions: [],
   };
 
   // Git commits since date in agent's directory
@@ -601,6 +669,9 @@ export function loadOpsData(config?: OpsConfig): OpsSnapshot {
   const actions = readActions(teamPath, agents);
   const tmuxSessions = readTmuxSessions();
   const reviewStatus = readReviewStatus(teamPath, agents);
+
+  // Cross-reference tmux panes with agents to detect active sessions
+  enrichWithActiveSessions(reviewStatus.agentActivity, tmuxSessions);
 
   const flatMessages = inboxData.flatMap((s) => s.messages);
   const counts: SummaryCounts = {

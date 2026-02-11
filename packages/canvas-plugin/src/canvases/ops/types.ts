@@ -115,6 +115,13 @@ export interface TmuxPane {
   paneIndex: number;
   currentCommand: string;
   currentPath: string;
+  paneTitle: string;
+}
+
+export interface ActiveAgentSession {
+  ticket?: string;
+  paneTitle?: string;
+  path?: string;
 }
 
 // Review / Agent status
@@ -131,6 +138,7 @@ export interface AgentActivity {
   memoryTotal: number;    // total memory log entries across all files
   memory24h: number;      // memory log entries in files updated in last 24 hours
   hasMemory: boolean;     // agent has memory system installed
+  activeSessions: ActiveAgentSession[];  // currently running claude sessions
 }
 
 export interface ReviewStatus {

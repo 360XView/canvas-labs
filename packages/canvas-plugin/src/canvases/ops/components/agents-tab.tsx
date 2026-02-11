@@ -3,8 +3,21 @@
 
 import React from "react";
 import { Box, Text } from "ink";
-import type { ReviewStatus } from "../types";
+import type { ReviewStatus, ActiveAgentSession } from "../types";
 import { OPS_COLORS } from "../types";
+
+function formatActiveSessions(sessions: ActiveAgentSession[]): string {
+  if (sessions.length === 0) return "\u2014";
+  const tickets = sessions.map((s) => s.ticket).filter(Boolean) as string[];
+  if (sessions.length === 1) {
+    return tickets[0] || "1 sess";
+  }
+  if (tickets.length > 0) {
+    const short = tickets.map((t) => t.replace(/^(TKT|L[23]|BD)-0*/, "$1-"));
+    return short.length <= 2 ? short.join(",") : `${short[0]}+${sessions.length - 1}`;
+  }
+  return `${sessions.length} sess`;
+}
 
 interface Props {
   reviewStatus: ReviewStatus;
@@ -84,7 +97,7 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
       {/* Column headers */}
       <Box>
         <Text color={OPS_COLORS.header}>
-          {"  Agent     Reflected  Cmts Dirty Unpsh Inbox Sent  MemTot Mem24h Status"}
+          {"  Agent     Reflected  Cmts Dirty Unpsh Inbox Sent  MemTot Mem24h Active    Status"}
         </Text>
       </Box>
       <Text color={OPS_COLORS.dim}>{divider}</Text>
@@ -105,12 +118,14 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
         const sent = (row.agent === "shared" ? "-" : `${row.sentCount}`).padEnd(6);
         const memTot = row.hasMemory ? `${row.memoryTotal}`.padEnd(7) : "-".padEnd(7);
         const mem24h = row.hasMemory ? `${row.memory24h}`.padEnd(7) : "-".padEnd(7);
+        const active = (row.agent === "shared" ? "-" : formatActiveSessions(row.activeSessions)).padEnd(10);
 
         // Color dirty/unpushed if non-zero
         const dirtyColor = row.dirtyFiles > 0 ? OPS_COLORS.warning : (isSelected ? OPS_COLORS.selected : OPS_COLORS.text);
         const unpshColor = row.unpushedCommits > 0 ? OPS_COLORS.accent : (isSelected ? OPS_COLORS.selected : OPS_COLORS.text);
         const memTotColor = row.hasMemory && row.memoryTotal > 0 ? OPS_COLORS.success : (isSelected ? OPS_COLORS.selected : OPS_COLORS.dim);
         const mem24hColor = row.hasMemory && row.memory24h > 0 ? OPS_COLORS.success : (isSelected ? OPS_COLORS.selected : OPS_COLORS.dim);
+        const activeColor = row.activeSessions.length > 0 ? OPS_COLORS.success : (isSelected ? OPS_COLORS.selected : OPS_COLORS.dim);
         const baseColor = isSelected ? OPS_COLORS.selected : OPS_COLORS.text;
 
         return (
@@ -121,6 +136,7 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
             <Text color={baseColor} bold={isSelected}>{inbox}{sent}</Text>
             <Text color={memTotColor}>{memTot}</Text>
             <Text color={mem24hColor}>{mem24h}</Text>
+            <Text color={activeColor} bold={row.activeSessions.length > 0}>{active}</Text>
             <Text color={row.statusColor} bold={row.isNew}>{row.statusLabel}</Text>
           </Box>
         );
@@ -139,6 +155,14 @@ export function AgentsTab({ reviewStatus, selectedIdx, innerWidth, contentRows }
           {rows[selectedIdx].hasMemory && (
             <Text color={OPS_COLORS.dim}>
               Memory: {rows[selectedIdx].memoryTotal} total entries, {rows[selectedIdx].memory24h} in last 24h
+            </Text>
+          )}
+          {rows[selectedIdx].activeSessions.length > 0 && (
+            <Text color={OPS_COLORS.success}>
+              Active: {rows[selectedIdx].activeSessions.map((s) => {
+                const parts = [s.ticket, s.paneTitle?.split(" \u00B7 ").slice(2, 3).join("")].filter(Boolean);
+                return parts.length > 0 ? parts.join("/") : "session";
+              }).join(", ")}
             </Text>
           )}
         </Box>

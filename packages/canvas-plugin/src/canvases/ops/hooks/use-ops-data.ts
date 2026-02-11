@@ -23,6 +23,7 @@ import {
   readActions,
   readTmuxSessions,
   readReviewStatus,
+  enrichWithActiveSessions,
 } from "../data-loaders";
 import { join } from "path";
 
@@ -69,8 +70,11 @@ export function useOpsData(config?: OpsConfig): OpsData {
     setGitStatuses(readAllGitStatuses(teamPath));
     setIdeas(readIdeas(teamPath, agents));
     setActions(readActions(teamPath, agents));
-    setTmuxSessions(readTmuxSessions());
-    setReviewStatus(readReviewStatus(teamPath, agents));
+    const sessions = readTmuxSessions();
+    const review = readReviewStatus(teamPath, agents);
+    enrichWithActiveSessions(review.agentActivity, sessions);
+    setTmuxSessions(sessions);
+    setReviewStatus(review);
     setLastRefresh(new Date());
   }, [inboxPath, ticketsPath, agents, teamPath]);
 
