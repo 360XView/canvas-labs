@@ -6,6 +6,7 @@ import { mkdirSync, existsSync, writeFileSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { loadModule, generateTutorPrompt } from "./module-loader";
 import { getWorkspaceDir, getProgress, getCurrentProfile, touchProfile } from "../tutor/profile-manager";
+import { getProfileDir } from "../tutor/defaults";
 import { generateTutorCLAUDEmd } from "../tutor/prompts/tutor-prompt";
 import { runHealthcheck, getModuleHealthcheck, formatHealthcheckResult } from "./healthcheck";
 import type { Progress } from "../tutor/types";
@@ -180,6 +181,9 @@ export async function spawnLabEnvironment(
     // Use :* prefix matching for Bash commands
     const settingsPath = join(claudeDir, "settings.local.json");
 
+    // Memory directory for tutor observations
+    const memoryDir = join(getProfileDir(profileName), "memory");
+
     // Build capture script command with env vars baked in
     const captureScriptPath = resolve(basePath, "scripts/capture-tutor-output.sh");
     const hookCommand = `LAB_LOG_DIR="${logDir}" LAB_SESSION_ID="${labId}" "${captureScriptPath}"`;
@@ -191,6 +195,8 @@ export async function spawnLabEnvironment(
           "Read(//tmp/**)",
           "Write(//tmp/**)",
           "Glob(//tmp/**)",
+          `Read(${memoryDir}/**)`,
+          `Write(${memoryDir}/**)`,
           "Bash(ls:*)",
           "Bash(cat:*)",
         ],

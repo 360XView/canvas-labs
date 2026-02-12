@@ -97,6 +97,19 @@ function sendEvent(): void {
   });
 }
 
+// Send SESSION_END before shutdown so the tutor can write observations
+async function sendSessionEnd(): Promise<void> {
+  log("[tutor-watcher] Sending TUTOR:SESSION_END");
+  try {
+    await sendToClaudeCode("TUTOR:SESSION_END");
+    // Give the tutor time to write observations
+    await new Promise((resolve) => setTimeout(resolve, 8_000));
+    log("[tutor-watcher] SESSION_END grace period complete");
+  } catch (error) {
+    log(`[tutor-watcher] Failed to send SESSION_END: ${error}`);
+  }
+}
+
 // Handle log file changes
 function onLogChange(isCommand: boolean = false): void {
   log(`[tutor-watcher] onLogChange called - isCommand: ${isCommand}, initialized: ${state.initialized}, hasUserActivity: ${state.hasUserActivity}`);
@@ -218,8 +231,9 @@ process.on("SIGINT", () => {
   process.exit(0);
 });
 
-process.on("SIGTERM", () => {
-  log("[tutor-watcher] Shutting down...");
+process.on("SIGTERM", async () => {
+  log("[tutor-watcher] Shutting down, sending SESSION_END...");
+  await sendSessionEnd();
   heartbeat?.stop();
   process.exit(0);
 });
@@ -234,8 +248,9 @@ if (socketPath) {
     socketPath,
     checkIntervalMs: 30_000,
     missedChecksBeforeExit: 3,
-    onOrphaned: () => {
-      log("[tutor-watcher] Session ended, shutting down...");
+    onOrphaned: async () => {
+      log("[tutor-watcher] Session ended, sending SESSION_END...");
+      await sendSessionEnd();
       heartbeat?.stop();
       process.exit(0);
     },
