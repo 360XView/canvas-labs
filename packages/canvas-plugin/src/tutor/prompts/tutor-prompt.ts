@@ -6,7 +6,8 @@ import { join } from "path";
 import { mkdirSync, writeFileSync, existsSync } from "fs";
 import { loadModule, generateTutorPrompt as generateModuleTutorPrompt } from "../../lab/module-loader";
 import { getWorkspaceDir } from "../profile-manager";
-import { TUTOR_BASE_DIR } from "../defaults";
+import { TUTOR_BASE_DIR, getProfileDir, getMemoryDir, getSessionsDir } from "../defaults";
+import { generateMemoryContext, ensureMemoryDir, pruneOldSessions } from "../memory";
 import type { Progress } from "../types";
 
 export interface TutorPromptConfig {
@@ -107,6 +108,16 @@ export function generateTutorCLAUDEmd(config: TutorPromptConfig): string {
   // Generate profile-specific context
   const profileContext = generateProfileContext(profileName, moduleId, progress);
 
+  // Generate memory context — ensure dirs exist, prune old sessions, load memory
+  const profileDir = getProfileDir(profileName);
+  ensureMemoryDir(profileDir);
+  pruneOldSessions(profileDir);
+  const memoryContext = generateMemoryContext(profileDir);
+
+  // Memory directory paths for write instructions
+  const memoryDir = getMemoryDir(profileName);
+  const sessionsDir = getSessionsDir(profileName);
+
   return `# Lab Tutor
 
 You are a friendly, encouraging tutor helping a student complete a hands-on lab.
@@ -119,6 +130,8 @@ You are a friendly, encouraging tutor helping a student complete a hands-on lab.
 - Ask before giving hints when student seems stuck
 
 ${profileContext}
+
+${memoryContext}
 
 ## Commands
 
@@ -146,6 +159,12 @@ An event occurred in the lab. Read the log files and respond appropriately:
    - Nothing new since last check → Stay quiet, don't repeat yourself
 
 **Important:** Keep track of what you've already responded to. Don't congratulate the same completion twice.
+
+### TUTOR:SESSION_END
+The lab session is ending. Before shutdown:
+1. Write your session observations to \`${sessionsDir}/{date}-{labId}.md\`
+2. Update \`${memoryDir}/MEMORY.md\` if you observed patterns worth remembering
+3. Be concise — you have ~10 seconds before the session closes
 
 ## Current Module: ${module.title}
 
@@ -328,6 +347,47 @@ After reading terminal.log and confirming the student completed the task:
 - Make them relevant to what the student just learned
 - Keep instructions clear and concise
 - Celebrate completion with extra enthusiasm!
+
+## Memory
+
+You have persistent memory about this student. Use it naturally — reference past sessions,
+adapt your teaching based on what you know about how this student learns.
+
+**At session end** (when you receive TUTOR:SESSION_END):
+1. Write a session summary to \`${sessionsDir}/{date}-{labId}.md\` using this template:
+   \`\`\`
+   # Session: {lab-name}
+   **Date:** {date}
+   **Duration:** ~{minutes}min
+   **Outcome:** {completed | abandoned at step N | in-progress}
+
+   ## What Happened
+   {1-3 sentence summary}
+
+   ## Observations
+   {What you noticed — skill strengths/weaknesses, approach, preferences}
+
+   ## What Worked
+   {Teaching approaches that landed well}
+
+   ## Flags
+   {Things to watch for next time — or "None"}
+   \`\`\`
+2. Review and update \`${memoryDir}/MEMORY.md\` if you observed stable patterns:
+   - If an observation is consistent across 2+ sessions → promote to MEMORY.md
+   - If new evidence contradicts existing memory → update MEMORY.md
+   - If a flag is resolved → remove it
+   - Keep MEMORY.md under ~40 lines — consolidate if it grows too long
+
+**During the session** (optional):
+- If you notice something significant (breakthrough, frustration, stated preference),
+  append a note to the current session file.
+
+**What to write:** Observations a teacher would note — learning approach, what works,
+what doesn't, skill strengths/weaknesses, flags for next time.
+
+**What NOT to write:** Raw data (commands, timing, scores) — that's already captured elsewhere.
+Write what only a teacher can observe.
 `;
 }
 
