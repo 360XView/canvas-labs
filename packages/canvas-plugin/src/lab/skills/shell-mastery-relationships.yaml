@@ -1,0 +1,131 @@
+# Skill Relationships for Shell & Linux Domain
+# Source: PROD-004 skill taxonomy design (Section 7)
+
+relationships:
+  # Navigation → File Inspection prerequisites
+  - from: shell.nav.absolute-paths
+    to: shell.files.display
+    type: prerequisite
+  - from: shell.nav.relative-paths
+    to: shell.files.display
+    type: prerequisite
+  - from: shell.nav.list-contents
+    to: shell.files.display
+    type: prerequisite
+  - from: shell.nav.absolute-paths
+    to: shell.files.search
+    type: prerequisite
+  - from: shell.nav.relative-paths
+    to: shell.files.search
+    type: prerequisite
+  - from: shell.nav.list-contents
+    to: shell.files.search
+    type: prerequisite
+  - from: shell.nav.absolute-paths
+    to: shell.files.pipes
+    type: prerequisite
+  - from: shell.nav.relative-paths
+    to: shell.files.pipes
+    type: prerequisite
+  - from: shell.nav.list-contents
+    to: shell.files.pipes
+    type: prerequisite
+  - from: shell.nav.absolute-paths
+    to: shell.files.redirect
+    type: prerequisite
+  - from: shell.nav.relative-paths
+    to: shell.files.redirect
+    type: prerequisite
+  - from: shell.nav.list-contents
+    to: shell.files.redirect
+    type: prerequisite
+
+  # File Inspection → Text Processing
+  - from: shell.files.pipes
+    to: shell.text.pipelines
+    type: prerequisite
+  - from: shell.files.redirect
+    to: shell.text.transform
+    type: prerequisite
+
+  # File Inspection → File Finding
+  - from: shell.files.search
+    to: shell.find.combined
+    type: prerequisite
+
+  # Text Processing → Log Analysis
+  - from: shell.text.sort
+    to: shell.analysis.frequency
+    type: prerequisite
+  - from: shell.text.unique
+    to: shell.analysis.frequency
+    type: prerequisite
+  - from: shell.text.pipelines
+    to: shell.analysis.frequency
+    type: prerequisite
+
+  # Scripting prerequisites
+  - from: shell.script.basics
+    to: shell.script.variables
+    type: prerequisite
+  - from: shell.script.basics
+    to: shell.script.conditionals
+    type: prerequisite
+  - from: shell.script.basics
+    to: shell.script.loops
+    type: prerequisite
+  - from: shell.script.basics
+    to: shell.script.exit-codes
+    type: prerequisite
+
+  # Integration (analysis) prerequisites
+  - from: shell.text.pipelines
+    to: shell.analysis.extraction
+    type: prerequisite
+  - from: shell.files.search
+    to: shell.analysis.extraction
+    type: prerequisite
+  - from: shell.script.basics
+    to: shell.analysis.extraction
+    type: prerequisite
+  - from: shell.text.columns
+    to: shell.analysis.extraction
+    type: prerequisite
+  - from: shell.text.pipelines
+    to: shell.analysis.security
+    type: prerequisite
+  - from: shell.files.search
+    to: shell.analysis.security
+    type: prerequisite
+  - from: shell.script.basics
+    to: shell.analysis.security
+    type: prerequisite
+  - from: shell.text.columns
+    to: shell.analysis.security
+    type: prerequisite
+  - from: shell.text.pipelines
+    to: shell.analysis.automation
+    type: prerequisite
+  - from: shell.files.search
+    to: shell.analysis.automation
+    type: prerequisite
+  - from: shell.script.basics
+    to: shell.analysis.automation
+    type: prerequisite
+  - from: shell.text.columns
+    to: shell.analysis.automation
+    type: prerequisite
+
+  # Related skills (same concept, different depth)
+  - from: shell.nav.absolute-paths
+    to: shell.nav.relative-paths
+    type: related
+  - from: shell.files.pipes
+    to: shell.files.redirect
+    type: related
+  - from: shell.text.sort
+    to: shell.text.unique
+    type: related
+  - from: shell.script.conditionals
+    to: shell.script.loops
+    type: related

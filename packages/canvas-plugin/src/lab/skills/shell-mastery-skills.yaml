@@ -1,0 +1,216 @@
+# Shell & Linux Skill Catalog
+# Source: PROD-004 skill taxonomy design (Section 4)
+# 27 skills across 6 groups
+
+domain:
+  id: shell
+  name: Shell & Linux
+  description: Command-line proficiency in Unix/Linux shell environments
+
+groups:
+  - id: nav
+    name: Filesystem Navigation
+    skills:
+      - id: shell.nav.absolute-paths
+        name: Navigate with Absolute Paths
+        description: Navigate the filesystem using absolute paths from root
+        evidence_levels: [knows, applies]
+        prerequisites: []
+        tags: [beginner, navigation]
+
+      - id: shell.nav.relative-paths
+        name: Navigate with Relative Paths
+        description: "Navigate using relative paths, ., .., and ~ shortcuts"
+        evidence_levels: [knows, understands, applies]
+        prerequisites: []
+        tags: [beginner, navigation]
+
+      - id: shell.nav.list-contents
+        name: List Directory Contents
+        description: List and inspect directory contents with ls and flags
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [beginner, navigation]
+
+      - id: shell.nav.path-concepts
+        name: Understand Path Structure
+        description: Explain how absolute and relative paths resolve
+        evidence_levels: [understands]
+        prerequisites: []
+        tags: [beginner, concepts]
+
+  - id: files
+    name: File Inspection & I/O
+    skills:
+      - id: shell.files.display
+        name: Display File Contents
+        description: "View file contents with cat, head, tail"
+        evidence_levels: [applies]
+        prerequisites: [shell.nav.absolute-paths, shell.nav.relative-paths, shell.nav.list-contents]
+        tags: [files, reading]
+
+      - id: shell.files.search
+        name: Search File Contents
+        description: Search within files using grep
+        evidence_levels: [applies]
+        prerequisites: [shell.nav.absolute-paths, shell.nav.relative-paths, shell.nav.list-contents]
+        tags: [files, search]
+
+      - id: shell.files.pipes
+        name: Chain Commands with Pipes
+        description: "Connect commands using | to build processing chains"
+        evidence_levels: [applies]
+        prerequisites: [shell.nav.absolute-paths, shell.nav.relative-paths, shell.nav.list-contents]
+        tags: [pipes, composition]
+
+      - id: shell.files.redirect
+        name: Redirect Output
+        description: "Direct command output to files with > and >>"
+        evidence_levels: [applies]
+        prerequisites: [shell.nav.absolute-paths, shell.nav.relative-paths, shell.nav.list-contents]
+        tags: [redirect, files]
+
+      - id: shell.files.io-concepts
+        name: Understand Pipes vs Redirects
+        description: Explain the difference between pipes and file redirection
+        evidence_levels: [understands]
+        prerequisites: []
+        tags: [concepts, pipes]
+
+  - id: text
+    name: Text Processing
+    skills:
+      - id: shell.text.sort
+        name: Sort Text Data
+        description: "Arrange lines with sort and its flags (-n, -r, -k)"
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [text, processing]
+
+      - id: shell.text.unique
+        name: Deduplicate and Count
+        description: Find unique lines and count occurrences with uniq
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [text, processing]
+
+      - id: shell.text.columns
+        name: Extract Columns
+        description: Extract and process columns with awk
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [text, processing]
+
+      - id: shell.text.transform
+        name: Transform Text
+        description: Find and replace text with sed
+        evidence_levels: [applies]
+        prerequisites: [shell.files.redirect]
+        tags: [text, processing]
+
+      - id: shell.text.pipelines
+        name: Build Processing Pipelines
+        description: Combine multiple tools into multi-stage data pipelines
+        evidence_levels: [understands, applies]
+        prerequisites: [shell.files.pipes]
+        tags: [pipelines, composition]
+
+  - id: find
+    name: File Finding
+    skills:
+      - id: shell.find.by-attributes
+        name: Find Files by Attributes
+        description: "Locate files by name, type, size, and modification time"
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [find, search]
+
+      - id: shell.find.exec
+        name: Execute on Found Files
+        description: Run commands on find results with -exec
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [find, automation]
+
+      - id: shell.find.combined
+        name: Combine Find with Tools
+        description: Use find with grep and other tools for compound searches
+        evidence_levels: [applies]
+        prerequisites: [shell.files.search]
+        tags: [find, composition]
+
+      - id: shell.find.performance
+        name: Understand Find Behavior
+        description: "Explain find's recursive nature and performance implications"
+        evidence_levels: [understands]
+        prerequisites: []
+        tags: [find, concepts]
+
+  - id: script
+    name: Bash Scripting
+    skills:
+      - id: shell.script.basics
+        name: Create Executable Scripts
+        description: "Write scripts with shebang, make executable, run them"
+        evidence_levels: [applies]
+        prerequisites: []
+        tags: [scripting, basics]
+
+      - id: shell.script.variables
+        name: Use Variables and Arguments
+        description: "Define variables, use $1/$2 arguments, parameter defaults"
+        evidence_levels: [applies]
+        prerequisites: [shell.script.basics]
+        tags: [scripting, variables]
+
+      - id: shell.script.conditionals
+        name: Write Conditional Logic
+        description: Use if/then/else/fi with test conditions
+        evidence_levels: [applies]
+        prerequisites: [shell.script.basics]
+        tags: [scripting, control-flow]
+
+      - id: shell.script.loops
+        name: Write Loops
+        description: Use for and while loops for iteration
+        evidence_levels: [applies]
+        prerequisites: [shell.script.basics]
+        tags: [scripting, control-flow]
+
+      - id: shell.script.exit-codes
+        name: Understand Exit Codes
+        description: "Explain exit codes, use && and || for command chaining"
+        evidence_levels: [understands, applies]
+        prerequisites: [shell.script.basics]
+        tags: [scripting, concepts]
+
+  - id: analysis
+    name: Log Analysis — Integration
+    skills:
+      - id: shell.analysis.extraction
+        name: Extract Data from Logs
+        description: Pull specific fields from structured log files
+        evidence_levels: [applies]
+        prerequisites: [shell.text.pipelines, shell.files.search, shell.script.basics, shell.text.columns]
+        tags: [analysis, logs]
+
+      - id: shell.analysis.frequency
+        name: Perform Frequency Analysis
+        description: "Count and rank occurrences in data (sort | uniq -c pattern)"
+        evidence_levels: [understands, applies]
+        prerequisites: [shell.text.sort, shell.text.unique, shell.text.pipelines]
+        tags: [analysis, statistics]
+
+      - id: shell.analysis.security
+        name: Detect Security Patterns
+        description: "Identify security-relevant events (failed logins, anomalies)"
+        evidence_levels: [applies]
+        prerequisites: [shell.text.pipelines, shell.files.search, shell.script.basics, shell.text.columns]
+        tags: [analysis, security]
+
+      - id: shell.analysis.automation
+        name: Automate Analysis
+        description: "Create reusable, parameterized analysis scripts"
+        evidence_levels: [applies]
+        prerequisites: [shell.text.pipelines, shell.files.search, shell.script.basics, shell.text.columns]
+        tags: [analysis, automation]

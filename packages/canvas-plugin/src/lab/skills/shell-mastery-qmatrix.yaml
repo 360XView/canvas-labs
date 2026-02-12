@@ -1,0 +1,412 @@
+# Q-Matrix: Step → Skill Mapping for Shell-Mastery Course
+# Source: PROD-004 skill taxonomy design (Section 5)
+# 65 mappings across 40 steps in 6 labs
+
+mappings:
+  # =========================================================================
+  # Lab 1: shell-navigation (6 mappings)
+  # =========================================================================
+  - lab_id: shell-navigation
+    step_id: navigate-absolute
+    skill_id: shell.nav.absolute-paths
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-navigation
+    step_id: navigate-relative
+    skill_id: shell.nav.relative-paths
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-navigation
+    step_id: home-shortcut
+    skill_id: shell.nav.relative-paths
+    level: applies
+    weight: 0.5
+
+  - lab_id: shell-navigation
+    step_id: list-files
+    skill_id: shell.nav.list-contents
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-navigation
+    step_id: path-quiz
+    skill_id: shell.nav.path-concepts
+    level: understands
+    weight: 1.0
+
+  - lab_id: shell-navigation
+    step_id: path-quiz
+    skill_id: shell.nav.relative-paths
+    level: understands
+    weight: 0.5
+
+  # =========================================================================
+  # Lab 2: shell-file-operations (9 mappings)
+  # =========================================================================
+  - lab_id: shell-file-operations
+    step_id: display-file
+    skill_id: shell.files.display
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-file-operations
+    step_id: view-first-lines
+    skill_id: shell.files.display
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-file-operations
+    step_id: search-with-grep
+    skill_id: shell.files.search
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-file-operations
+    step_id: chain-with-pipe
+    skill_id: shell.files.pipes
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-file-operations
+    step_id: chain-with-pipe
+    skill_id: shell.files.search
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-file-operations
+    step_id: redirect-output
+    skill_id: shell.files.redirect
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-file-operations
+    step_id: redirect-output
+    skill_id: shell.files.search
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-file-operations
+    step_id: append-output
+    skill_id: shell.files.redirect
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-file-operations
+    step_id: pipe-vs-redirect-quiz
+    skill_id: shell.files.io-concepts
+    level: understands
+    weight: 1.0
+
+  # =========================================================================
+  # Lab 3: shell-text-processing (15 mappings)
+  # =========================================================================
+  - lab_id: shell-text-processing
+    step_id: sort-lines
+    skill_id: shell.text.sort
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-text-processing
+    step_id: find-unique
+    skill_id: shell.text.unique
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-text-processing
+    step_id: find-unique
+    skill_id: shell.text.sort
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: find-unique
+    skill_id: shell.files.pipes
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: count-occurrences
+    skill_id: shell.text.unique
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-text-processing
+    step_id: count-occurrences
+    skill_id: shell.files.pipes
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: extract-column
+    skill_id: shell.text.columns
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-text-processing
+    step_id: sed-replace
+    skill_id: shell.text.transform
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-text-processing
+    step_id: sed-replace
+    skill_id: shell.files.redirect
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: build-pipeline
+    skill_id: shell.text.pipelines
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-text-processing
+    step_id: build-pipeline
+    skill_id: shell.text.sort
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: build-pipeline
+    skill_id: shell.text.unique
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: build-pipeline
+    skill_id: shell.files.redirect
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-text-processing
+    step_id: pipeline-quiz
+    skill_id: shell.text.pipelines
+    level: understands
+    weight: 1.0
+
+  - lab_id: shell-text-processing
+    step_id: pipeline-quiz
+    skill_id: shell.text.unique
+    level: understands
+    weight: 0.5
+
+  # =========================================================================
+  # Lab 4: shell-find-files (8 mappings)
+  # =========================================================================
+  - lab_id: shell-find-files
+    step_id: find-by-name
+    skill_id: shell.find.by-attributes
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-find-files
+    step_id: find-by-type
+    skill_id: shell.find.by-attributes
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-find-files
+    step_id: find-by-size
+    skill_id: shell.find.by-attributes
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-find-files
+    step_id: find-by-time
+    skill_id: shell.find.by-attributes
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-find-files
+    step_id: find-with-exec
+    skill_id: shell.find.exec
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-find-files
+    step_id: find-with-grep
+    skill_id: shell.find.combined
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-find-files
+    step_id: find-with-grep
+    skill_id: shell.files.search
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-find-files
+    step_id: find-quiz
+    skill_id: shell.find.performance
+    level: understands
+    weight: 1.0
+
+  # =========================================================================
+  # Lab 5: shell-bash-scripting (7 mappings)
+  # =========================================================================
+  - lab_id: shell-bash-scripting
+    step_id: create-first-script
+    skill_id: shell.script.basics
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-bash-scripting
+    step_id: use-variables
+    skill_id: shell.script.variables
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-bash-scripting
+    step_id: write-if-statement
+    skill_id: shell.script.conditionals
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-bash-scripting
+    step_id: write-for-loop
+    skill_id: shell.script.loops
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-bash-scripting
+    step_id: write-while-loop
+    skill_id: shell.script.loops
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-bash-scripting
+    step_id: chain-commands
+    skill_id: shell.script.exit-codes
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-bash-scripting
+    step_id: exit-code-quiz
+    skill_id: shell.script.exit-codes
+    level: understands
+    weight: 1.0
+
+  # =========================================================================
+  # Lab 6: shell-log-analysis — capstone (20 mappings)
+  # =========================================================================
+  - lab_id: shell-log-analysis
+    step_id: top-ips
+    skill_id: shell.analysis.extraction
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-log-analysis
+    step_id: top-ips
+    skill_id: shell.analysis.frequency
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-log-analysis
+    step_id: top-ips
+    skill_id: shell.text.columns
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-log-analysis
+    step_id: top-ips
+    skill_id: shell.text.unique
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-log-analysis
+    step_id: top-ips
+    skill_id: shell.text.pipelines
+    level: applies
+    weight: 0.5
+
+  - lab_id: shell-log-analysis
+    step_id: status-codes
+    skill_id: shell.analysis.extraction
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-log-analysis
+    step_id: status-codes
+    skill_id: shell.analysis.frequency
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-log-analysis
+    step_id: status-codes
+    skill_id: shell.text.columns
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-log-analysis
+    step_id: failed-logins
+    skill_id: shell.analysis.security
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-log-analysis
+    step_id: failed-logins
+    skill_id: shell.files.search
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-log-analysis
+    step_id: failed-usernames
+    skill_id: shell.analysis.security
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-log-analysis
+    step_id: failed-usernames
+    skill_id: shell.analysis.extraction
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-log-analysis
+    step_id: failed-usernames
+    skill_id: shell.text.columns
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-log-analysis
+    step_id: create-script
+    skill_id: shell.analysis.automation
+    level: applies
+    weight: 1.0
+
+  - lab_id: shell-log-analysis
+    step_id: create-script
+    skill_id: shell.script.basics
+    level: applies
+    weight: 0.5
+
+  - lab_id: shell-log-analysis
+    step_id: create-script
+    skill_id: shell.files.redirect
+    level: applies
+    weight: 0.3
+
+  - lab_id: shell-log-analysis
+    step_id: make-reusable
+    skill_id: shell.analysis.automation
+    level: applies
+    weight: 0.8
+
+  - lab_id: shell-log-analysis
+    step_id: make-reusable
+    skill_id: shell.script.variables
+    level: applies
+    weight: 0.5
+
+  - lab_id: shell-log-analysis
+    step_id: pipeline-quiz
+    skill_id: shell.text.pipelines
+    level: understands
+    weight: 0.8
+
+  - lab_id: shell-log-analysis
+    step_id: pipeline-quiz
+    skill_id: shell.analysis.frequency
+    level: understands
+    weight: 0.8
