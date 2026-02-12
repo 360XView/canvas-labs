@@ -1,0 +1,16 @@
+{
+  "scenarioId": "linux-user-mgmt-baseline",
+  "moduleId": "linux-user-management",
+  "startTime": "2026-02-12T16:41:02.627Z",
+  "endTime": "2026-02-12T16:41:19.616Z",
+  "durationSeconds": 17,
+  "logDir": "/var/folders/3m/0zq835w16vz17nkbjg2pchxm0000gn/T/eval-1770914462627",
+  "success": true,
+  "errors": [],
+  "completedSteps": [
+    "become-root",
+    "create-user",
+    "set-permissions",
+    "add-to-group"
+  ]
+}
