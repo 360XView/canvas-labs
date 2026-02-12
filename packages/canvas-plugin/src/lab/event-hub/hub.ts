@@ -149,10 +149,12 @@ export function createEventHub(options: EventHubOptions): EventHub {
     switch (msg.type) {
       case "hintRequested":
         eventLogger.logHintRequested(msg.stepId, msg.hintIndex, msg.totalHints);
+        stateWriter?.recordHintRevealed(msg.stepId, msg.hintIndex);
         log(`VTA: Hint requested for step ${msg.stepId}`);
         break;
       case "solutionViewed":
         eventLogger.logSolutionViewed(msg.stepId);
+        stateWriter?.recordSolutionViewed(msg.stepId);
         log(`VTA: Solution viewed for step ${msg.stepId}`);
         break;
       case "stepViewed":
@@ -167,6 +169,13 @@ export function createEventHub(options: EventHubOptions): EventHub {
           msg.correctOptions,
           msg.attempts
         );
+        stateWriter?.recordQuestionAnswer(msg.stepId, {
+          answered: true,
+          isCorrect: msg.isCorrect,
+          selectedOptions: msg.selectedOptions,
+          correctOptions: msg.correctOptions,
+          attempts: msg.attempts,
+        });
         log(`VTA: Question answered for step ${msg.stepId}`);
         if (msg.isCorrect && !completedSteps.has(msg.stepId)) {
           handleStepCompleted({ stepId: msg.stepId, source: "question", taskIndex: 0 });
