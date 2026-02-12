@@ -6,7 +6,7 @@ import { join } from "path";
 import { mkdirSync, writeFileSync, existsSync } from "fs";
 import { loadModule, generateTutorPrompt as generateModuleTutorPrompt } from "../../lab/module-loader";
 import { getWorkspaceDir } from "../profile-manager";
-import { TUTOR_BASE_DIR, getProfileDir, getMemoryDir, getSessionsDir } from "../defaults";
+import { getProfileDir, getMemoryDir, getSessionsDir } from "../defaults";
 import { generateMemoryContext, ensureMemoryDir, pruneOldSessions } from "../memory";
 import type { Progress } from "../types";
 
