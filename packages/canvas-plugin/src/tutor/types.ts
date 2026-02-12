@@ -57,3 +57,10 @@ export interface TutorConfig {
   version: "1.0";
   defaultProfile: string;
 }
+
+export interface TutorMemoryConfig {
+  maxSessionFiles: number; // default: 5
+  memoryTokenBudget: number; // default: 800
+  sessionTokenBudget: number; // default: 400
+  skillSnapshotBudget: number; // default: 200
+}

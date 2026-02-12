@@ -3,6 +3,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import type { Profile, Progress, TutorConfig } from "./types";
+import { ensureMemoryDir } from "./memory";
 import {
   TUTOR_BASE_DIR,
   PROFILES_DIR,
@@ -88,6 +89,9 @@ export function createProfile(profileId: string, name?: string): Profile {
   // Create directories
   mkdirSync(profileDir, { recursive: true });
   mkdirSync(workspaceDir, { recursive: true });
+
+  // Create memory directories
+  ensureMemoryDir(profileDir);
 
   // Create profile
   const profile = createDefaultProfile(profileId, name);

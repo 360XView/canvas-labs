@@ -63,3 +63,11 @@ export function getProgressFile(profileId: string): string {
 export function getWorkspaceDir(profileId: string): string {
   return join(getProfileDir(profileId), "workspace");
 }
+
+export function getMemoryDir(profileId: string): string {
+  return join(getProfileDir(profileId), "memory");
+}
+
+export function getSessionsDir(profileId: string): string {
+  return join(getMemoryDir(profileId), "sessions");
+}
